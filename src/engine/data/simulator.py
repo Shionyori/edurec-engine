@@ -14,9 +14,9 @@ def generate(config) -> DataBundle:
     user_type = rng.dirichlet(np.ones(3), size=n_u)             # course/article/video
     user_act = rng.gamma(2.0, 2.0, size=n_u)                    # 活跃度
 
-    # 资源：类目、标签(0-4个)、质量、热度、冷门度
+    # 资源：类目、标签(1-4个)、质量、热度、冷门度
     res_cat = rng.integers(0, n_cat, size=n_r)
-    res_tags = [tuple(rng.choice(n_tag, size=int(rng.integers(1, 5)), replace=False).astype(int).tolist())
+    res_tags = [tuple(rng.choice(n_tag, size=min(int(rng.integers(1, 5)), max(1, n_tag)), replace=False).astype(int).tolist())
                 for _ in range(n_r)]
     res_quality = rng.beta(2.0, 2.0, size=n_r)
     res_pop = rng.lognormal(0.0, 1.0, size=n_r)
@@ -28,12 +28,15 @@ def generate(config) -> DataBundle:
     ]
     users = [User(user_id=i) for i in range(n_u)]
 
-    # --- 采样交互 ---
+    # --- 采样交互（自适应循环，行为量达标） ---
     behaviors: list[Behavior] = []
     ratings: list[Rating] = []
+    p_user = user_act / user_act.sum()
     ts = 1_700_000_000
-    for _ in range(config.sim_n_interactions):
-        u = int(rng.choice(n_u, p=user_act / user_act.sum()))
+    attempts = 0
+    while len(behaviors) < config.sim_n_interactions and attempts < config.sim_n_interactions * 10:
+        attempts += 1
+        u = int(rng.choice(n_u, p=p_user))
         i = int(rng.integers(n_r))
         match = user_cat[u, res_cat[i]]                          # 类目匹配度
         p = float(match * res_quality[i] * res_pop[i] + rng.normal(0, 0.1))
