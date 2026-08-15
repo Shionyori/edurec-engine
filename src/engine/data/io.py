@@ -11,7 +11,7 @@ def _df_to_resources(df: pd.DataFrame) -> list[Resource]:
             resource_id=int(row.resource_id),
             type=str(row.type),
             category_id=int(row.category_id),
-            tags=tuple(str(row.tags).split("|")) if row.tags else (),
+            tags=tuple(str(row.tags).split("|")) if pd.notna(row.tags) else (),
             metadata={},
         ))
     return out
