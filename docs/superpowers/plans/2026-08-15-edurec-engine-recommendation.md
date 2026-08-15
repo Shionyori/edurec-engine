@@ -26,6 +26,30 @@
 
 ---
 
+## 分支规划（模块级分支约定）
+
+> 依据 AGENTS.md 与用户约定（2026-08-15）：**每个模块一个分支，模块完成且审查通过后合并 main**；整体小修改（配置调整等）直接放 main。不做「一个分支做完所有」。
+
+| 分支 | 模块 | 任务 | 状态 |
+|------|------|------|------|
+| `feat/data-layer` | 数据层 | T1-T4（骨架/schema、模拟器、预处理、ML-1M 加载器） | ✅ 已完成，已合并 main（1f05b08） |
+| `feat/features` | 特征工程 | T5（声明式特征、用户/资源画像） | 待开 |
+| `feat/recall` | 召回模型 | T6-T7（双塔 DSSM、召回训练/评估） | 待开 |
+| `feat/rank` | 排序模型 | T8-T9（多任务 DeepFM、排序训练/评估） | 待开 |
+| `feat/pipeline` | 流水线 | T10-T12（重排、批量推理、一键脚本/README） | 待开 |
+
+**流程：**
+1. 每个模块分支从**最新 main** 拉出（`git checkout -b feat/xxx main`）
+2. 分支内按本计划任务 TDD 开发，逐任务审查通过
+3. 模块内全部任务完成、测试全绿后，合并到 main
+4. 从新 main 开下一个模块分支，直到全部完成
+
+**分支命名**：`<type>/<short-description>`，描述功能点而非交付物（不叫 `feat/engine` 这类冗余名）。提交命名 `<type>(<scope>): <subject>`（如 `feat(data):`、`feat(recall):`）。
+
+**当前进度**：数据层模块已合并（main @ 1f05b08），下一步开 `feat/features` 做 T5。
+
+---
+
 ### Task 1: 项目骨架、统一配置与数据 schema
 
 **Files:**
