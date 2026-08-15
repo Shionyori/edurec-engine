@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import numpy as np
-from .schema import DataBundle, User, Resource, Behavior, Rating
+from .schema import DataBundle
 
 
 @dataclass
@@ -56,9 +56,9 @@ def build_vocab(bundle: DataBundle) -> Vocab:
     user2id = {u.user_id: i for i, u in enumerate(bundle.users)}
     item2id = {r.resource_id: i for i, r in enumerate(bundle.resources)}
     cat2id = {c: i for i, c in enumerate(
-        {r.category_id for r in bundle.resources})}
+        sorted({r.category_id for r in bundle.resources}))}
     tag_set = {t for r in bundle.resources for t in r.tags}
-    tag2id = {t: i for i, t in enumerate(tag_set)}
+    tag2id = {t: i for i, t in enumerate(sorted(tag_set))}
     type2id = {"course": 0, "article": 1, "video": 2}
     return Vocab(user2id=user2id, item2id=item2id, cat2id=cat2id,
                  tag2id=tag2id, type2id=type2id,
@@ -84,7 +84,6 @@ def time_split(bundle: DataBundle, train_ratio: float, val_ratio: float,
         test_b.extend(items[n_va:])
     for x in bundle.ratings:
         u = x.user_id
-        n_tr = int(len(by_user.get(u, [])) * train_ratio)
         # 简化：评分按时间戳归入对应集合
         (train_r if x.ts <= _split_ts(bundle, u, train_ratio)
          else val_r if x.ts <= _split_ts(bundle, u, train_ratio + val_ratio)
@@ -111,6 +110,8 @@ def build_recall_pairs(bundle: DataBundle, vocab: Vocab) -> list[tuple[int, int]
 
 def build_rank_samples(bundle: DataBundle, vocab: Vocab, rng: np.random.Generator,
                        neg_per_pos: int = 3) -> list[RankSample]:
+    """构建正负样本。注意：负样本数可能少于 neg_per_pos * 正样本数，
+    因为随机采到的未交互对若与正样本或已采样负样本冲突会被跳过。"""
     pos: dict[tuple[int, int], list] = {}
     for x in bundle.behaviors:
         key = (vocab.user2id[x.user_id], vocab.item2id[x.resource_id])

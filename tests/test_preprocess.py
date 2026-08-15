@@ -26,6 +26,15 @@ def test_vocab_counts():
     assert vocab.n_items == len(b.resources)
     assert vocab.n_tags >= 1
 
+def test_vocab_id_mapping_deterministic():
+    b = _sim_small()
+    v1 = build_vocab(b)
+    v2 = build_vocab(b)
+    assert v1.tag2id == v2.tag2id
+    assert v1.cat2id == v2.cat2id
+    assert v1.user2id == v2.user2id
+    assert v1.item2id == v2.item2id
+
 def test_time_split_no_overlap():
     b = _sim_small()
     cleaned = clean(b, 5, 5)
@@ -34,6 +43,16 @@ def test_time_split_no_overlap():
     train_uv = {(x.user_id, x.resource_id) for x in splits.train.behaviors}
     test_uv = {(x.user_id, x.resource_id) for x in splits.test.behaviors}
     assert len(train_uv) > 0 and len(test_uv) > 0
+    # 防泄漏：同一用户训练集最大 ts <= 测试集最小 ts（时间切分按用户时间序）
+    from collections import defaultdict
+    train_ts, test_ts = defaultdict(list), defaultdict(list)
+    for x in splits.train.behaviors:
+        train_ts[x.user_id].append(x.ts)
+    for x in splits.test.behaviors:
+        test_ts[x.user_id].append(x.ts)
+    for u in train_ts:
+        if test_ts[u]:
+            assert max(train_ts[u]) <= min(test_ts[u])
 
 def test_rank_samples_labels():
     b = _sim_small()
