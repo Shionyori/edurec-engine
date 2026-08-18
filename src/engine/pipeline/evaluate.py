@@ -79,3 +79,53 @@ def evaluate_recall(model, bundle, vocab, config, device: str = "cpu") -> dict:
     return {f"recall@{k}": float(np.mean(rec)),
             f"hitrate@{k}": float(np.mean(hr)),
             f"ndcg@{k}": float(np.mean(ndcg))}
+
+
+def rmse(y_true, y_pred) -> float:
+    a, b = np.asarray(y_true, dtype=float), np.asarray(y_pred, dtype=float)
+    return float(np.sqrt(np.mean((a - b) ** 2)))
+
+
+def evaluate_rank(model, splits, config, device: str = "cpu") -> dict:
+    """在验证集上评估排序模型：CTR/CVR AUC + 评分 RMSE。"""
+    import torch
+    from ..data.preprocess import build_rank_samples
+    from ..features.user_features import build_user_features
+    from ..features.item_features import build_item_features
+    uf = build_user_features(splits.train, splits.vocab)      # 防泄漏：统计来自训练集
+    it = build_item_features(splits.train, splits.vocab)
+    samples = build_rank_samples(splits.val, splits.vocab,
+                                 __import__("numpy").random.default_rng(0))
+    model.eval()
+    y_ctr, p_ctr, y_cvr, p_cvr, y_rat, p_rat = [], [], [], [], [], []
+    with torch.no_grad():
+        for s in samples:
+            u = uf.get(s.user_idx)
+            i = it.get(s.item_idx)
+            if u is None or i is None:
+                continue
+            sparse = {
+                "user_id": torch.tensor([s.user_idx], device=device),
+                "item_id": torch.tensor([s.item_idx], device=device),
+                "category_id": torch.tensor([int(i["category_id"])], device=device),
+                "tags": torch.tensor(np.asarray([i["tags"]], dtype=np.float32),
+                                     dtype=torch.float32, device=device),
+                "type_id": torch.tensor([int(i["type_id"])], device=device),
+                "hour": torch.tensor([s.hour], device=device),
+                "dow": torch.tensor([s.dow], device=device),
+            }
+            numeric = torch.tensor([[
+                float(u["active_days"]), float(u["n_views"]), float(u["n_favs"]),
+                float(u["gap_days"]), float(i["log_view"]), float(i["avg_rating"]),
+                float(i["age_days"]),
+            ]], device=device)
+            pctr, pcvr, rating = model(sparse, numeric)
+            y_ctr.append(s.ctr); p_ctr.append(float(pctr))
+            y_cvr.append(s.cvr); p_cvr.append(float(pcvr))
+            if s.rating is not None:
+                y_rat.append(s.rating); p_rat.append(float(rating))
+    return {
+        "ctr_auc": auc_from_scores(y_ctr, p_ctr),
+        "cvr_auc": auc_from_scores(y_cvr, p_cvr) if len(set(y_cvr)) > 1 else 0.5,
+        "rating_rmse": rmse(y_rat, p_rat) if p_rat else float("nan"),
+    }
