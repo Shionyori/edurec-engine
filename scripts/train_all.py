@@ -20,6 +20,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data-source", default="sim",
                     choices=["sim", "movielens", "platform"])
+    ap.add_argument("--snapshot-dir", default="",
+                    help="platform 快照目录（data_source=platform 时）")
     args = ap.parse_args()
     cfg = EngineConfig(data_source=args.data_source)
     if args.snapshot_dir:
@@ -28,8 +30,12 @@ def main() -> None:
 
     if cfg.data_source == "sim":
         raw = load_bundle(os.path.join(cfg.data_dir, "sim"))
-    else:
+    elif cfg.data_source == "movielens":
         raw = load_ml(cfg.data_dir, auto_download=True)
+    else:  # platform
+        if not cfg.snapshot_dir:
+            raise SystemExit("--data-source platform 需要用 --snapshot-dir 指定快照目录")
+        raw = load_platform(cfg.snapshot_dir)
     bundle = clean(raw, cfg.min_user_interactions, cfg.min_item_interactions)
     splits = time_split(bundle, cfg.train_ratio, cfg.val_ratio,
                         np.random.default_rng(cfg.seed))
