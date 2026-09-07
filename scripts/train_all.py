@@ -9,6 +9,7 @@ import torch
 from engine.config import EngineConfig
 from engine.data.io import load_bundle
 from engine.data.movielens import load as load_ml
+from engine.data.platform import load as load_platform
 from engine.data.preprocess import clean, time_split
 from engine.models.recall.trainer import train_recall
 from engine.models.rank.trainer import train_rank
@@ -17,15 +18,24 @@ from engine.pipeline.evaluate import evaluate_recall, evaluate_rank
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data-source", default="sim", choices=["sim", "movielens"])
+    ap.add_argument("--data-source", default="sim",
+                    choices=["sim", "movielens", "platform"])
+    ap.add_argument("--snapshot-dir", default="",
+                    help="platform 快照目录（data_source=platform 时）")
     args = ap.parse_args()
     cfg = EngineConfig(data_source=args.data_source)
+    if args.snapshot_dir:
+        cfg.snapshot_dir = args.snapshot_dir
     np.random.seed(cfg.seed)
 
     if cfg.data_source == "sim":
         raw = load_bundle(os.path.join(cfg.data_dir, "sim"))
-    else:
+    elif cfg.data_source == "movielens":
         raw = load_ml(cfg.data_dir, auto_download=True)
+    else:  # platform
+        if not cfg.snapshot_dir:
+            raise SystemExit("--data-source platform 需要用 --snapshot-dir 指定快照目录")
+        raw = load_platform(cfg.snapshot_dir)
     bundle = clean(raw, cfg.min_user_interactions, cfg.min_item_interactions)
     splits = time_split(bundle, cfg.train_ratio, cfg.val_ratio,
                         np.random.default_rng(cfg.seed))
