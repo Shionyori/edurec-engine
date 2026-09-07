@@ -22,6 +22,8 @@ def main() -> None:
                     choices=["sim", "movielens", "platform"])
     args = ap.parse_args()
     cfg = EngineConfig(data_source=args.data_source)
+    if args.snapshot_dir:
+        cfg.snapshot_dir = args.snapshot_dir
     np.random.seed(cfg.seed)
 
     if cfg.data_source == "sim":

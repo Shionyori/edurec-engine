@@ -17,6 +17,10 @@ from engine.pipeline.infer_batch import infer_batch
 
 def main() -> None:
     cfg = EngineConfig()
+    if os.environ.get("ENGINE_DATA_SOURCE"):
+        cfg.data_source = os.environ["ENGINE_DATA_SOURCE"]
+    if os.environ.get("ENGINE_SNAPSHOT_DIR"):
+        cfg.snapshot_dir = os.environ["ENGINE_SNAPSHOT_DIR"]
     if cfg.data_source == "platform":
         if not cfg.snapshot_dir:
             raise SystemExit("data_source=platform 需要配置 snapshot_dir")
