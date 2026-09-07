@@ -9,6 +9,7 @@ import torch
 from engine.config import EngineConfig
 from engine.data.io import load_bundle
 from engine.data.movielens import load as load_ml
+from engine.data.platform import load as load_platform
 from engine.data.preprocess import clean, time_split
 from engine.models.recall.trainer import train_recall
 from engine.models.rank.trainer import train_rank
@@ -17,7 +18,8 @@ from engine.pipeline.evaluate import evaluate_recall, evaluate_rank
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data-source", default="sim", choices=["sim", "movielens"])
+    ap.add_argument("--data-source", default="sim",
+                    choices=["sim", "movielens", "platform"])
     args = ap.parse_args()
     cfg = EngineConfig(data_source=args.data_source)
     np.random.seed(cfg.seed)

@@ -47,6 +47,7 @@ class EngineConfig:
     # 路径
     data_dir: str = "dataset"
     model_dir: str = "model"
+    snapshot_dir: str = ""   # platform 快照目录（data_source=platform 时使用）
 
     @classmethod
     def from_yaml(cls, path: str) -> "EngineConfig":

@@ -7,6 +7,7 @@ import torch
 
 from engine.config import EngineConfig
 from engine.data.io import load_bundle
+from engine.data.platform import load as load_platform
 from engine.data.preprocess import clean, build_vocab
 from engine.features.feature_config import build_rank_sparse_specs
 from engine.models.recall.dssm import TwoTower
@@ -16,7 +17,12 @@ from engine.pipeline.infer_batch import infer_batch
 
 def main() -> None:
     cfg = EngineConfig()
-    raw = load_bundle(os.path.join(cfg.data_dir, "sim"))
+    if cfg.data_source == "platform":
+        if not cfg.snapshot_dir:
+            raise SystemExit("data_source=platform 需要配置 snapshot_dir")
+        raw = load_platform(cfg.snapshot_dir)
+    else:
+        raw = load_bundle(os.path.join(cfg.data_dir, "sim"))
     all_users = sorted(u.user_id for u in raw.users)   # 覆盖全量用户（含冷启动）
     bundle = clean(raw, cfg.min_user_interactions, cfg.min_item_interactions)
     vocab = build_vocab(bundle)
