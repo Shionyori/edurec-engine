@@ -1,4 +1,5 @@
 from __future__ import annotations
+import argparse
 import json
 import os
 
@@ -16,10 +17,20 @@ from engine.pipeline.infer_batch import infer_batch
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--data-source", default=None,
+                    choices=["sim", "movielens", "platform"])
+    ap.add_argument("--snapshot-dir", default=None,
+                    help="platform 快照目录（data_source=platform 时）")
+    args = ap.parse_args()
     cfg = EngineConfig()
-    if os.environ.get("ENGINE_DATA_SOURCE"):
+    if args.data_source is not None:
+        cfg.data_source = args.data_source
+    elif os.environ.get("ENGINE_DATA_SOURCE"):
         cfg.data_source = os.environ["ENGINE_DATA_SOURCE"]
-    if os.environ.get("ENGINE_SNAPSHOT_DIR"):
+    if args.snapshot_dir is not None:
+        cfg.snapshot_dir = args.snapshot_dir
+    elif os.environ.get("ENGINE_SNAPSHOT_DIR"):
         cfg.snapshot_dir = os.environ["ENGINE_SNAPSHOT_DIR"]
     if cfg.data_source == "platform":
         if not cfg.snapshot_dir:
