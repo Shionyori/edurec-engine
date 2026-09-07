@@ -16,8 +16,9 @@ from engine.pipeline.infer_batch import infer_batch
 
 def main() -> None:
     cfg = EngineConfig()
-    bundle = clean(load_bundle(os.path.join(cfg.data_dir, "sim")),
-                   cfg.min_user_interactions, cfg.min_item_interactions)
+    raw = load_bundle(os.path.join(cfg.data_dir, "sim"))
+    all_users = sorted(u.user_id for u in raw.users)   # 覆盖全量用户（含冷启动）
+    bundle = clean(raw, cfg.min_user_interactions, cfg.min_item_interactions)
     vocab = build_vocab(bundle)
     ckpt = torch.load(os.path.join(cfg.model_dir, "models.pt"), map_location="cpu")
     recall_model = TwoTower(vocab.n_users, vocab.n_items, vocab.n_cats,
@@ -25,11 +26,13 @@ def main() -> None:
     rank_model = MultiTaskDeepFM(build_rank_sparse_specs(vocab), numeric_dim=7)
     recall_model.load_state_dict(ckpt["recall"])
     rank_model.load_state_dict(ckpt["rank"])
-    recs = infer_batch(recall_model, rank_model, bundle, vocab, cfg)
+    recs = infer_batch(recall_model, rank_model, bundle, vocab, cfg,
+                       target_users=all_users)
     with open(os.path.join(cfg.model_dir, "recommendations.json"), "w",
               encoding="utf-8") as f:
         json.dump({str(k): v for k, v in recs.items()}, f)
-    print(f"[run_batch_infer] 为 {len(recs)} 个用户生成推荐 -> "
+    print(f"[run_batch_infer] 为 {len(recs)}/{len(all_users)} 个用户生成推荐"
+          f"(key/value 均为数据集原始 ID) -> "
           f"{os.path.join(cfg.model_dir, 'recommendations.json')}")
 
 
