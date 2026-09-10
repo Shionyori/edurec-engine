@@ -147,5 +147,7 @@ def build_rank_samples(bundle: DataBundle, vocab: Vocab, rng: np.random.Generato
             if nk in pos or nk in made:
                 continue
             made.add(nk)
-            samples.append(RankSample(u, i, 0, 0, None, hour=0, dow=0))
+            samples.append(RankSample(u, i, 0, 0, None,
+                                      hour=int(rng.integers(0, 24)),
+                                      dow=int(rng.integers(0, 7))))
     return samples
