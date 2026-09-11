@@ -63,3 +63,18 @@ def test_rank_samples_labels():
     assert all(s.ctr in (0, 1) and s.cvr in (0, 1) for s in samples)
     assert all(0 <= s.hour <= 23 and 0 <= s.dow <= 6 for s in samples)
     assert any(s.rating is not None for s in samples)
+
+
+def test_rank_neg_samples_have_random_time():
+    """负样本时间上下文应随机分布，而非硬编码为 (0,0)。
+
+    若负样本 hour/dow 恒为 0，而正样本为真实时间，则排序模型会把
+    hour/dow 当作正负标签的判别特征，导致 ctr_auc 虚高到 1.0（标签泄漏）。
+    """
+    b = _sim_small()
+    cleaned = clean(b, 5, 5)
+    vocab = build_vocab(cleaned)
+    samples = build_rank_samples(cleaned, vocab, np.random.default_rng(1), neg_per_pos=2)
+    negs = [s for s in samples if s.ctr == 0]
+    assert negs, "应存在负样本"
+    assert any(s.hour != 0 or s.dow != 0 for s in negs)
