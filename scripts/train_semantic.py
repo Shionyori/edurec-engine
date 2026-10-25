@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import time
@@ -161,13 +162,30 @@ def main() -> None:
             print(f"  {k:20s} {v:+.4f}")
 
     os.makedirs(cfg.model_dir, exist_ok=True)
+    # 语料指纹：编码器的 IDF 权重来自语料，换一份资源数据就会产出不同的向量。
+    # 单看 encoder_version 只反映参数、不反映语料，因此这里单独存一份指纹，
+    # 供推理侧校验「训练与推理用的是同一批资源」。
+    corpus_fingerprint = hashlib.sha256(
+        "".join(sorted(resource_text(r) for r in bundle.resources)).encode("utf-8")
+    ).hexdigest()[:16]
     torch.save({
         "student_tower": model.student_tower.state_dict(),
         "item_tower": model.item_tower.state_dict(),
         "in_dim": model.in_dim,
         "out_dim": model.out_dim,
         "encoder_version": encoder.version,
+        "corpus_fingerprint": corpus_fingerprint,
         "item_ids": item_ids,
+        "model_name": "semantic_two_tower",
+        "tower_kind": getattr(model, "tower_kind", "deterministic"),
+        "config": {
+            "recall_embed_dim": cfg.recall_embed_dim,
+            "recall_hidden_dim": cfg.recall_hidden_dim,
+            "quality_w_semantic": cfg.quality_w_semantic,
+            "quality_w_rating": cfg.quality_w_rating,
+            "quality_w_popularity": cfg.quality_w_popularity,
+            "top_n": cfg.top_n,
+        },
     }, os.path.join(cfg.model_dir, "semantic_recall.pt"))
     with open(os.path.join(cfg.model_dir, "metrics_semantic.json"), "w",
               encoding="utf-8") as f:
