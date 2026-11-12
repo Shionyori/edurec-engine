@@ -76,6 +76,7 @@ def main() -> None:
         cfg.recall_sample_mode = args.sample_mode
     if args.negatives is not None:
         cfg.eval_n_negatives = args.negatives
+    cfg.validate()
 
     torch.manual_seed(cfg.seed)
     np.random.seed(cfg.seed)

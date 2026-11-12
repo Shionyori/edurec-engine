@@ -111,6 +111,54 @@ class EngineConfig:
         with open(path, "w", encoding="utf-8") as f:
             yaml.safe_dump(asdict(self), f, allow_unicode=True)
 
+    def validate(self) -> None:
+        """在进入训练/推理前校验配置，把错误暴露在入口而不是计算中途。
+
+        以前这些约束散落在各模块（例如权重和必须为正，否则 `fuse_quality` 在
+        逐用户循环里才抛错；比例非法则在切分后得到空集合）。集中校验后，CLI 参数
+        组合错误、YAML 写错都会在加载数据前失败。
+        """
+        problems: list[str] = []
+
+        if self.data_source not in ("sim", "mooccube", "platform"):
+            problems.append(f"未知 data_source: {self.data_source!r}")
+        if self.data_source == "platform" and not self.snapshot_dir:
+            problems.append("data_source=platform 时必须提供 snapshot_dir")
+
+        if self.top_n <= 0:
+            problems.append("top_n 必须为正")
+        if not (0.0 < self.train_ratio < 1.0):
+            problems.append("train_ratio 必须在 (0, 1) 内")
+        if self.val_ratio < 0 or self.train_ratio + self.val_ratio >= 1.0:
+            problems.append("val_ratio 必须 >= 0 且 train_ratio + val_ratio < 1")
+
+        for name in ("quality_w_semantic", "quality_w_rating", "quality_w_popularity"):
+            if getattr(self, name) < 0:
+                problems.append(f"{name} 不能为负")
+        if (self.quality_w_semantic + self.quality_w_rating
+                + self.quality_w_popularity) <= 0:
+            problems.append("质量融合权重之和必须为正")
+
+        if self.encoder_dim <= 0:
+            problems.append("encoder_dim 必须为正")
+        if self.encoder_kind not in ("local", "sentence_transformer"):
+            problems.append(f"未知 encoder_kind: {self.encoder_kind!r}")
+        if self.tower_kind not in ("deterministic", "gaussian"):
+            problems.append(f"未知 tower_kind: {self.tower_kind!r}")
+        if self.recall_sample_mode not in ("last_prefix", "all_prefixes"):
+            problems.append(f"未知 recall_sample_mode: {self.recall_sample_mode!r}")
+        if self.recall_epochs <= 0:
+            problems.append("recall_epochs 必须为正")
+        if self.recall_batch_size < 2:
+            problems.append("recall_batch_size 至少为 2（in-batch 负样本需要）")
+        if self.eval_n_negatives < 0:
+            problems.append("eval_n_negatives 不能为负")
+        if not self.eval_ks or any(k <= 0 for k in self.eval_ks):
+            problems.append("eval_ks 必须是非空正整数序列")
+
+        if problems:
+            raise ValueError("配置非法：" + "；".join(problems))
+
     def mooccube_config(self):
         """按当前配置构造 MOOCCubeConfig（延迟 import，避免循环依赖）。"""
         from .data.mooccube import MOOCCubeConfig

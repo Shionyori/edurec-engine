@@ -54,6 +54,17 @@ def load_model(cfg: EngineConfig, bundle, checkpoint_path: str):
                          f"`python -m scripts.train_semantic`")
     ckpt = torch.load(checkpoint_path, map_location="cpu")
 
+    # 批量推理当前只实现确定性双塔。高斯塔的学生塔输入多一维（历史长度），
+    # 权重形状不同；如果这里硬套 TwoTowerSemantic，会在 load_state_dict 时报错，
+    # 或者更糟——静默地按缺省历史长度打分。明确拒绝，避免交付错误结果。
+    tower_kind = ckpt.get("tower_kind", "deterministic")
+    if tower_kind != "deterministic":
+        raise SystemExit(
+            f"当前批量推理不支持 tower_kind={tower_kind!r} 的 checkpoint。\n"
+            "高斯双塔（阶段二）已实现并评测，但默认不启用；"
+            "如需推理，请先用 --tower-kind deterministic 重新训练，"
+            "或为 run_batch_infer 补齐高斯塔的批量打分入口。")
+
     item_texts = [resource_text(r) for r in
                   sorted(bundle.resources, key=lambda x: x.resource_id)]
     encoder = build_encoder(cfg)
@@ -107,6 +118,7 @@ def main() -> None:
         cfg.snapshot_dir = args.snapshot_dir
     if args.top_n is not None:
         cfg.top_n = args.top_n
+    cfg.validate()
 
     t0 = time.time()
     bundle = load_data(cfg)
