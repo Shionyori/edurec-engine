@@ -8,7 +8,7 @@
 
 - CourseHub: 语义课程推荐框架（DOI: `10.1109/ICNWC68145.2026.11518402`）。
 - 本仓库的实现与论文的差异（学生侧输入、是否训练、质量权重）见
-  [`design.md` §1.2](design.md#12-与-coursehub-的差异以及为什么)。
+  [`design.md` §1.2](../design/model-design.md#12-与-coursehub-的差异以及为什么)。
 
 ## 2. 知识图谱/概念生成（`src/kg/`）
 
@@ -20,7 +20,7 @@
 
 `src/kg/research/` 是论文原型的研究脚本，不在生产路径上；
 生产路径只有 `server.py` / `generate.py` / `recommender/pipeline.py` 等
-（见 [`../src/kg/README.md`](../src/kg/README.md)）。
+（见 [`../src/kg/README.md`](../../src/kg/README.md)）。
 
 ## 3. 数据集
 

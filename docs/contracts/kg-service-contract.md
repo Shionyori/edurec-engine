@@ -8,8 +8,8 @@
 - engine 未启动时，平台只失去「自动生成概念」，推荐、搜索、学习路径不受影响。
 
 机器可读的请求/响应形状见
-[`../contracts/v1/kg-service.schema.json`](../contracts/v1/kg-service.schema.json)，
-样本见 [`../contracts/v1/fixtures/kg-generate.response.json`](../contracts/v1/fixtures/kg-generate.response.json)。
+[`../contracts/v1/kg-service.schema.json`](../../contracts/v1/kg-service.schema.json)，
+样本见 [`../contracts/v1/fixtures/kg-generate.response.json`](../../contracts/v1/fixtures/kg-generate.response.json)。
 
 ## 启动
 

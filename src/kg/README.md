@@ -33,4 +33,4 @@ textwiki.py, textlang.py  Wikifier / 文本语言辅助
 - `src/kg/`：知识图谱/概念生成，入口 `scripts/kg_server.py` 与 `generate.py`。
 
 两者不互相 import；唯一的交汇点是平台侧：推荐结果走文件契约，概念生成走可选的
-HTTP 契约（见 `docs/platform-contract.md`）。
+HTTP 契约（见 `docs/contracts/platform-contract.md`）。

@@ -2,7 +2,7 @@
 
 本文只描述**现在**跑得通的链路。规范性约束以
 [`platform-contract.md`](platform-contract.md) 为准；机器可读版本与 golden fixture 在
-[`../contracts/v1/`](../contracts/v1/README.md)。
+[`../contracts/v1/`](../../contracts/v1/README.md)。
 
 ```
 platform 业务库 (MySQL，唯一事实来源)

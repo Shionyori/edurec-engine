@@ -38,7 +38,7 @@ def load(snapshot_dir: str) -> DataBundle:
 
     `description`（资源正文）是**可选列**：缺失时降级为空串而不报错。
     platform 的 `export_snapshot` 已导出该列（contract_version=1 的扩展列），
-    详见 docs/platform-contract.md「方向 A · resources.csv」。
+    详见 docs/contracts/platform-contract.md「方向 A · resources.csv」。
 
     `meta.json` 存在且带 `files_sha256` 时，加载前会逐个比对校验和。
     """

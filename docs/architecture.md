@@ -1,9 +1,9 @@
 # 目标架构：engine 的双角色与工程边界
 
 > 状态：设计基线（2026-11-12）
-> 跨仓系统视图：[`edurec-platform/docs/target-architecture.md`](../../edurec-platform/docs/target-architecture.md)
-> 约束清单：[`edurec-platform/docs/architecture-constraints.md`](../../edurec-platform/docs/architecture-constraints.md)
-> 主契约：[`platform-contract.md`](platform-contract.md)；在线契约：[`kg-service-contract.md`](kg-service-contract.md)
+> 跨仓系统视图：[`edurec-platform/docs/architecture.md`](https://github.com/Shionyori/edurec-platform/blob/main/docs/architecture.md)
+> 约束清单：[`edurec-platform/docs/constraints.md`](https://github.com/Shionyori/edurec-platform/blob/main/docs/constraints.md)
+> 主契约：[`platform-contract.md`](contracts/platform-contract.md)；在线契约：[`kg-service-contract.md`](contracts/kg-service-contract.md)
 
 ---
 

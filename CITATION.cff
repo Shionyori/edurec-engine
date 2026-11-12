@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "src/kg 派生自 EMBEDD-ER；推荐模型参考 CourseHub。引用信息见 docs/references.md。"
+message: "src/kg 派生自 EMBEDD-ER；推荐模型参考 CourseHub。引用信息见 docs/reference/references.md。"
 authors:
   - family-names: Bazouzi
     given-names: Aymen

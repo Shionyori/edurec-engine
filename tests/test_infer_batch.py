@@ -1,6 +1,6 @@
 """批量推理与交接契约的测试。
 
-重点钉住 `docs/platform-contract.md` 的硬约束——这些约束一旦破了，
+重点钉住 `docs/contracts/platform-contract.md` 的硬约束——这些约束一旦破了，
 platform 侧会整份导入失败（HTTP 500），因此必须有测试守住。
 """
 

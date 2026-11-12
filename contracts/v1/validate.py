@@ -1,6 +1,6 @@
 """交接契约 v1 校验器（仅标准库）。
 
-权威规范见 `docs/platform-contract.md`；本文件把其中的硬约束变成可执行检查，
+权威规范见 `docs/contracts/platform-contract.md`；本文件把其中的硬约束变成可执行检查，
 供两侧测试与手工排障共用。
 
 用法：

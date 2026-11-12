@@ -2,7 +2,7 @@
 
 > **状态**：V2.0（已实现并评测，2026-09-16）
 > **接入目标**：edurec-platform（独立仓库，通过文件交接；契约见
-> [`platform-contract.md`](platform-contract.md)，可执行版本见 [`../contracts/v1/`](../contracts/v1/README.md)）
+> [`platform-contract.md`](../contracts/platform-contract.md)，可执行版本见 [`../contracts/v1/`](../../contracts/v1/README.md)）
 > **上一版**：V1.0「双塔 DSSM + 多任务 DeepFM + MMR」，已整体移除，见 git 历史（截至 `9563a65`）
 > **概率式扩展**：已实现、已评测、暂不启用，结论与根因见
 > [`gaussian-recall-status.md`](gaussian-recall-status.md)
@@ -116,7 +116,7 @@ scripts/
   train_semantic.py         训练 + 评估（含对照基线）
   run_batch_infer.py        批量推理 → 交接文件
 src/kg/
-  server.py                 知识生成 HTTP 服务（可选在线契约，见 docs/kg-service-contract.md）
+  server.py                 知识生成 HTTP 服务（可选在线契约，见 docs/contracts/kg-service-contract.md）
   generate.py               标题/描述 → 概念图
   recommender/pipeline.py   生产用「资源 → 图 → 概念」流水线
   research/                 EMBEDD-ER 研究/一次性脚本（不在生产路径）
@@ -458,7 +458,7 @@ score_i = w₁ · sim(q, c_i) + w₂ · ratinĝ_i + w₃ · popularitŷ_i
   → 写出 recommendations.json（+ 旁挂信封）
 ```
 
-**交接契约**（`docs/platform-contract.md`）的硬约束：
+**交接契约**（`docs/contracts/platform-contract.md`）的硬约束：
 
 | 约束 | 实现 |
 |---|---|

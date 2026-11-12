@@ -1,6 +1,6 @@
 """批量推理：全量用户走语义召回 → 质量融合 → 去重 → top-N。
 
-对齐 `docs/platform-contract.md` 的「方向 B」：
+对齐 `docs/contracts/platform-contract.md` 的「方向 B」：
 
   - 主文件必须是 `{平台 user_id: [平台 resource_id, …]}`，按相关性降序、已去重；
   - **覆盖全量用户**，包括平台上没有行为的冷启动用户（走热门兜底）；
@@ -185,7 +185,7 @@ def write_handoff(result: BatchResult, out_path: str, envelope_path: str | None 
                   envelope: dict | None = None) -> None:
     """写主文件（+ 可选旁挂信封）。
 
-    契约硬约束（逐条对应 `docs/platform-contract.md`）：
+    契约硬约束（逐条对应 `docs/contracts/platform-contract.md`）：
 
       * 顶层**只有** `{字符串键: 非负整数数组}`，不得添加任何兄弟字段；
       * 键是十进制无符号整数；元素必须是 JSON **整数**（不能是字符串或小数）；

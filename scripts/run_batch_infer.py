@@ -4,7 +4,7 @@
     python -m scripts.run_batch_infer --data-source mooccube
     python -m scripts.run_batch_infer --data-source platform --snapshot-dir <dir>
 
-产出（`docs/platform-contract.md` 方向 B）：
+产出（`docs/contracts/platform-contract.md` 方向 B）：
     model/recommendations.json        主文件，{平台 user_id: [平台 resource_id, …]}
     model/recommendations.meta.json   旁挂信封（分数、模型标识、快照 run_id），可选
 """

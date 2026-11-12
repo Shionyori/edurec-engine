@@ -9,7 +9,7 @@
 **为什么保持独立仓库**：engine 是可独立引用/复现的模型工件（含 `CITATION.cff`），
 platform 是 Go + Vue 应用；双仓让 PyTorch/数据集与 Web 工具链互不污染，边界由
 [`contracts/v1`](contracts/v1/README.md) 固化。若未来「一次功能改动需同时改两仓」
-的频率达到每周 ≥1 次，再评估 monorepo（决策见 platform 的 `docs/design.md` #37）。
+的频率达到每周 ≥1 次，再评估 monorepo（决策见 platform 的 `docs/design/model-design.md` #37）。
 
 ## 模型
 
@@ -24,7 +24,7 @@ platform 是 Go + Vue 应用；双仓让 PyTorch/数据集与 Web 工具链互�
                                                      冷启动 ─► 热门兜底 ─────┘
 ```
 
-设计文档见 [`docs/design.md`](docs/design.md)，当前数据流见 [`docs/data-flow.md`](docs/data-flow.md)。
+设计文档见 [`docs/design/model-design.md`](docs/design/model-design.md)，当前数据流见 [`docs/contracts/data-flow.md`](docs/contracts/data-flow.md)。
 核心实测结论（MOOCCube，5000 活跃用户 / 706 门课，1 vs 99 采样协议）：
 
 | 方法 | HitRate@5 | HitRate@10 | NDCG@10 | MRR |
@@ -40,7 +40,7 @@ platform 是 Go + Vue 应用；双仓让 PyTorch/数据集与 Web 工具链互�
 1. **纯语义单独用弱于纯热门**；融合后才超过热门。权重是本数据集实测定的
    （`0.6 / 0.0 / 0.4`），**不是**论文的 `0.7 / 0.2 / 0.1`。
 2. **概率式（高斯分布）扩展已实现但不启用**——实测无收益，根因与后续方向见
-   [`docs/gaussian-recall-status.md`](docs/gaussian-recall-status.md)。
+   [`docs/design/gaussian-recall-status.md`](docs/design/gaussian-recall-status.md)。
 
 ## 环境与测试
 
@@ -57,7 +57,7 @@ python -m pytest
 |---|---|---|
 | `mooccube` | 数据放在 `dataset/MOOCCube/` | 真实教育域数据，**推荐用它验证模型**；数据集需自行下载（不入库） |
 | `sim` | `python -m scripts.gen_sim_data` | 模拟数据，打通流水线与回归测试 |
-| `platform` | 由 platform 的 `export_snapshot` 产出，拷入 `dataset/platform_snapshot/<run_id>/` | 平台真实快照，见 [`docs/platform-contract.md`](docs/platform-contract.md) |
+| `platform` | 由 platform 的 `export_snapshot` 产出，拷入 `dataset/platform_snapshot/<run_id>/` | 平台真实快照，见 [`docs/contracts/platform-contract.md`](docs/contracts/platform-contract.md) |
 
 > `dataset/`、`model/` 都不入库。`mooccube` 数据缺失时命令会明确报错，不会静默降级。
 
@@ -95,7 +95,7 @@ python -m scripts.run_batch_infer \
 
 ## 交接契约（可执行）
 
-规范文档：[`docs/platform-contract.md`](docs/platform-contract.md)
+规范文档：[`docs/contracts/platform-contract.md`](docs/contracts/platform-contract.md)
 可执行版本：[`contracts/v1/`](contracts/v1/README.md)（JSON Schema + golden fixtures + 校验器）
 
 ```bash
@@ -152,7 +152,7 @@ python -m scripts.run_batch_infer --data-source sim --model-dir model --out-dir 
 | POST | `/knowledge/generate` | `{title, description, point_code}` → `{concepts:[{name, page_rank}]}` |
 | POST | `/knowledge/generate_batch` | 批量生成，单条失败不阻断整批 |
 
-契约与版本规则见 [`docs/kg-service-contract.md`](docs/kg-service-contract.md)。
+契约与版本规则见 [`docs/contracts/kg-service-contract.md`](docs/contracts/kg-service-contract.md)。
 平台侧配置 `knowledge.generator_url`（默认 `http://127.0.0.1:8090`）；engine 未启动时
 只影响「自动生成概念」，不影响推荐、搜索等其他功能。
 
@@ -170,12 +170,13 @@ tests/                 engine + 契约测试
 - 参数集中在 `src/engine/config.py`，`seed` 固定可复现。
 - 文本编码器可插拔：本地降级实现（无网络依赖）↔ 真 transformer
   （`encoder_kind="sentence_transformer"`，需先装 `sentence-transformers` 并缓存模型）。
-- 引用与来源见 [`docs/references.md`](docs/references.md) 与 [`CITATION.cff`](CITATION.cff)；本仓库不再保存论文原文抽取文本。
+- 引用与来源见 [`docs/reference/references.md`](docs/reference/references.md) 与 [`CITATION.cff`](CITATION.cff)；本仓库不再保存论文原文抽取文本。
 
 ## 文档
 
-- [docs/README.md](docs/README.md) —— 文档索引（规范 / 模型 / 实验）
-- [docs/target-architecture.md](docs/target-architecture.md) —— engine 双角色与工程边界
-- [docs/architecture-review.md](docs/architecture-review.md) —— 架构评估、重构记录与路线图
-- [docs/platform-contract.md](docs/platform-contract.md) —— 交接契约（权威）
-- [contracts/v1/README.md](contracts/v1/README.md) —— 契约的可执行版本
+- [docs/README.md](docs/README.md) —— **文档地图（从这里开始）**
+- [docs/architecture.md](docs/architecture.md) —— engine 双角色与工程边界
+- [docs/contracts/README.md](docs/contracts/README.md) —— 跨仓契约总览（C1 / C2）
+- [docs/design/model-design.md](docs/design/model-design.md) —— 推荐模型设计
+
+详细设计与参考在 `docs/design/`、`docs/reference/`；契约权威在 `docs/contracts/`。

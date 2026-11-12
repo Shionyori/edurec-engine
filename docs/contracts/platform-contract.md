@@ -16,7 +16,7 @@
 对应地，platform 侧**不运行模型、不做推理**；模型权重只保留在 engine。
 
 **可执行版本**：本契约的 schema、golden fixture 与校验器在
-[`../contracts/v1/`](../contracts/v1/README.md)。改契约时先改那里，再同步 platform 的副本
+[`../contracts/v1/`](../../contracts/v1/README.md)。改契约时先改那里，再同步 platform 的副本
 （`scripts/check-contract-sync.sh`）。
 
 **可选的第三方向**：知识生成 HTTP 服务（`scripts/kg_server.py`）是独立于本契约的
@@ -50,7 +50,7 @@ engine 侧惯例是拷入 `dataset/platform_snapshot/<run_id>/`，目录名保�
 | `categories.csv` | `category_id,name` | ⬜ | 平台会写出；engine 目前不读它（只用 `category_id` 整数，不用分类名） |
 
 > **关于 `description`：** 它不是「新增字段」而是「已有字段的导出」。平台
-> `resources` 表本就有 `description TEXT`（见 platform 的 `docs/design.md` §5.2），
+> `resources` 表本就有 `description TEXT`（见 platform 的 `docs/design/model-design.md` §5.2），
 > `export_snapshot` 现已导出该列。engine 侧保持向后兼容：读到就用，
 > 读不到就用空串——因此旧快照仍能跑通，只是语义模型会基本失效。
 
@@ -322,7 +322,7 @@ Authorization: Bearer <管理员 access_token>
 
 - **这一版模型的收益尚未被证明。** MOOCCube 上语义召回的 HitRate@10 = 0.4432，
   低于热门基线 0.4930，NDCG 与 MRR 同样落后；融合热度后 HitRate@10 = 0.5758 才超过热门。
-  数字与诊断见 [`gaussian-recall-status.md`](gaussian-recall-status.md)。
+  数字与诊断见 [`gaussian-recall-status.md`](../design/gaussian-recall-status.md)。
   「契约通过」只说明能接得上，不等于值得上线。
 - **platform 侧数据量是真正的瓶颈。** 快照规模小（用户/行为少、资源以视频为主）时，
   任何模型都训练与评估不出结论；先积累真实行为，再谈模型收益。
@@ -340,9 +340,9 @@ Authorization: Bearer <管理员 access_token>
 
 ## 相关文档
 
-- 契约的可执行版本：[`../contracts/v1/README.md`](../contracts/v1/README.md)
+- 契约的可执行版本：[`../contracts/v1/README.md`](../../contracts/v1/README.md)
 - 可选在线能力：[`kg-service-contract.md`](kg-service-contract.md)
 - 当前数据流：[`data-flow.md`](data-flow.md)
-- platform 侧：[`docs/engine-integration.md`](https://github.com/Shionyori/edurec-platform/blob/main/docs/engine-integration.md)
-  ——接入形态与演进方向；[`docs/data-handoff.md`](https://github.com/Shionyori/edurec-platform/blob/main/docs/data-handoff.md)
+- platform 侧：[`docs/contracts/engine-integration.md`](https://github.com/Shionyori/edurec-platform/blob/main/docs/contracts/engine-integration.md)
+  ——接入形态与演进方向；[`docs/guides/data-handoff.md`](https://github.com/Shionyori/edurec-platform/blob/main/docs/guides/data-handoff.md)
   ——一轮刷新的完整步骤

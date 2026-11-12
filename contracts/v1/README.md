@@ -1,6 +1,6 @@
 # edurec 交接契约 v1（可执行版本）
 
-本目录把 [`docs/platform-contract.md`](../../docs/platform-contract.md) 里的**规范文字**变成
+本目录把 [`docs/contracts/platform-contract.md`](../../docs/contracts/platform-contract.md) 里的**规范文字**变成
 **可校验的机器可读产物**。规范文档仍是唯一权威；这里的东西只做两件事：
 
 1. 用 JSON Schema 固定「快照元信息 / 推荐主文件 / 旁挂信封」的形状；
@@ -70,7 +70,7 @@ golden fixture 的**唯一来源是本目录**。改契约时先改这里、跑 
 
 ## 修改契约的流程
 
-1. 改 `docs/platform-contract.md`（规范）与本目录 schema；
+1. 改 `docs/contracts/platform-contract.md`（规范）与本目录 schema；
 2. `python contracts/v1/make_fixtures.py` 重新生成 fixtures；
 3. `python -m pytest tests/test_contract.py` 通过；
 4. 在 platform 同步 fixture 并跑 `go test ./internal/service/...`；

@@ -122,9 +122,9 @@ MOOCCube 每门课只有一段简介，一份学生需求对应什么并不含�
 
 ## 相关文档
 
-- 设计文档：`docs/design.md`
-- 交接契约：`docs/platform-contract.md`
-- 引用信息（标题 / 作者 / DOI）：[`references.md`](references.md) 与 [`../CITATION.cff`](../CITATION.cff)
+- 设计文档：`docs/design/model-design.md`
+- 交接契约：`docs/contracts/platform-contract.md`
+- 引用信息（标题 / 作者 / DOI）：[`references.md`](../reference/references.md) 与 [`../CITATION.cff`](../../CITATION.cff)
 
 > 论文原文抽取文本已从仓库移除（避免收录受版权保护的全文）；需要核对时按
 > `references.md` 里的 DOI 自行获取。
