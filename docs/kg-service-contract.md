@@ -25,7 +25,33 @@ pip install -e .[kg]          # rdflib + scikit-learn（服务最小依赖）
 knowledge:
   generator_url: "http://127.0.0.1:8090"
   generator_timeout_seconds: 180
+  generator_token: ""              # 生产用 KNOWLEDGE_GENERATOR_TOKEN 注入
+  generator_max_concurrency: 4
+  generator_failure_threshold: 3   # 连续 3 次失败后熔断
+  generator_circuit_cooldown_seconds: 30
 ```
+
+### 生产运行约束
+
+| 项 | 约定 |
+|---|---|
+| 网络 | **只在内网暴露**；不挂公网 Ingress。batch 与 KG 是两个部署单元 |
+| 鉴权 | 生产启用 `--token` / `KG_SERVICE_TOKEN`；平台发送 `Authorization: Bearer <token>` |
+| 请求体上限 | `--max-body-bytes`，默认 **1 MiB**；超限 413 |
+| 批量上限 | `--max-batch-items`，默认 **50**；超限 400 |
+| 并发上限 | `--max-concurrency`，默认 **4**；饱和返回 429 |
+| 关联 ID | 平台发送 `X-Request-ID`；服务回写同名响应头，并在日志中记录 |
+| 契约版本 | 每个响应带 `X-Contract-Version: 1` |
+| 就绪 | `/ready` 检查 `--ready-file`；生产应指向模型/权重就绪标记 |
+| 客户端行为 | 超时 + 并发上限 + 连续失败熔断；**不自动重试生成**（昂贵且非确定性） |
+| 日志 | 结构化 JSON：request_id、path、duration_ms；不记录完整描述文本 |
+
+参考 SLO（可按部署规格调整）：
+
+- 可用性：≥ 99%（失败只影响自动生成概念）；
+- 单条生成延迟：p95 ≤ 5s（冷启动/首次模型加载除外）；
+- 错误率：5xx ≤ 1%；
+- 熔断/降级时平台侧快速失败，不占用业务请求线程。
 
 ## 接口
 
@@ -35,11 +61,21 @@ knowledge:
 {
   "status": "ok",
   "engine": "edurec-engine",
-  "version": "1.0",
+  "version": "1.1",
   "contract_version": 1,
   "capabilities": ["knowledge/generate", "knowledge/generate_batch"]
 }
 ```
+
+### `GET /ready`
+
+```json
+{"status": "ready", "contract_version": 1}
+```
+
+- 未配置 `--ready-file` 时恒为 200（进程可接请求）；
+- 配置了文件但文件不存在时返回 **503**，`status=not_ready`，并带 `reason`。
+- 用途：部署时摘流；与 `/health` 的 liveness 语义分开。
 
 ### `POST /knowledge/generate`
 
@@ -95,9 +131,14 @@ knowledge:
 
 | HTTP | 场景 | 响应 |
 |---|---|---|
-| 400 | 请求体为空/非 JSON、`title` 为空、`items` 非非空数组 | `{"error": "…"}` |
+| 400 | 请求体为空/非 JSON、`title` 为空、`items` 非非空数组、批量超上限 | `{"error": "…"}` |
+| 401 | 启用鉴权但缺失/错误的 `Authorization` | `{"error": "unauthorized"}` |
 | 404 | 未知路径 | `{"error": "not found"}` |
+| 413 | 请求体超过 `max_body_bytes` | `{"error": "…"}` |
+| 415 | `Content-Type` 不是 `application/json` | `{"error": "…"}` |
+| 429 | 并发已达上限 | `{"error": "too many concurrent requests"}` |
 | 500 | 生成内部错误（Wikifier/模型/IO） | `{"error": "…"}` |
+| 503 | `/ready` 检查未通过（模型/权重未就绪） | `{"status": "not_ready", "reason": "…"}` |
 
 平台侧把非 2xx 视为失败，只影响当前生成任务；不会回滚已有概念。
 

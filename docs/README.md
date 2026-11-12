@@ -14,6 +14,7 @@
 | 文档 | 内容 |
 |---|---|
 | [`design.md`](design.md) | 语义双塔 + 质量融合的设计与决策 |
+| [`target-architecture.md`](target-architecture.md) | engine 双角色（离线 batch / 在线 KG）与工程边界 |
 | [`architecture-review.md`](architecture-review.md) | 分层/数据访问/缓存/配置的评估、重构记录与路线图 |
 | [`gaussian-recall-status.md`](gaussian-recall-status.md) | 概率式扩展的负面结论与后续方向 |
 | [`references.md`](references.md) | 引用来源（CourseHub / EMBEDD-ER / 数据集） |

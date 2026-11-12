@@ -175,6 +175,7 @@ tests/                 engine + 契约测试
 ## 文档
 
 - [docs/README.md](docs/README.md) —— 文档索引（规范 / 模型 / 实验）
+- [docs/target-architecture.md](docs/target-architecture.md) —— engine 双角色与工程边界
 - [docs/architecture-review.md](docs/architecture-review.md) —— 架构评估、重构记录与路线图
 - [docs/platform-contract.md](docs/platform-contract.md) —— 交接契约（权威）
 - [contracts/v1/README.md](contracts/v1/README.md) —— 契约的可执行版本
