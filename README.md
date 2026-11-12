@@ -176,6 +176,7 @@ tests/                 engine + 契约测试
 
 - [docs/README.md](docs/README.md) —— **文档地图（从这里开始）**
 - [docs/architecture.md](docs/architecture.md) —— engine 双角色与工程边界
+- [docs/backlog.md](docs/backlog.md) —— engine 待实现清单与建议顺序
 - [docs/contracts/README.md](docs/contracts/README.md) —— 跨仓契约总览（C1 / C2）
 - [docs/design/model-design.md](docs/design/model-design.md) —— 推荐模型设计
 

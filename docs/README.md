@@ -7,6 +7,7 @@
 | 文档 | 回答什么问题 |
 |---|---|
 | [`architecture.md`](architecture.md) | engine 是什么：一个仓库、两个部署单元（离线 batch / 在线 KG），边界与演进路线 |
+| [`backlog.md`](backlog.md) | engine 待实现清单、优先级与建议顺序 |
 | [`contracts/README.md`](contracts/README.md) | 与 platform 怎么交互：C1 离线工件、C2 在线 KG |
 | [`design/model-design.md`](design/model-design.md) | 推荐模型怎么工作：语义双塔、质量融合、评估协议 |
 
