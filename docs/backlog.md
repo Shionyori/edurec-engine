@@ -36,6 +36,7 @@
 | ENG-05 | **配置分组**：Data / Encoder / Recall / Quality，保留 facade 兼容 | 待实现 | 现有测试与 CLI 不变；YAML 可按组书写 | 无 |
 | ENG-06 | **命名与口径清理**：`LocalTfidfSvdEncoder → LocalHashIdfEncoder`（保留别名）；需求文本统一到 `BundleAccess` | 待实现 | 三处需求文本实现收敛；等价性测试通过 | 无 |
 | ENG-07 | **高斯塔处置**：补齐 `history_len` 的批量推理入口，或移入 `research/` 并从生产包排除 | 待设计 | 不再存在“能训练、不能交付”的 checkpoint | 无 |
+| ENG-16 | **域目录重命名**：`src/engine → src/recommendation`、`src/kg → src/knowledge`，保留旧 import 别名一个版本 | 待设计 | 目录名与域语义一致；旧入口/import 仍可用；CI 与文档同步 | 无 |
 
 ---
 

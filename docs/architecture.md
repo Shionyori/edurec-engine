@@ -20,6 +20,33 @@ engine 不再是「纯离线脚本仓库」，但也不应该变成一个混合�
 
 离线推荐是**主链路**；KG 是**旁路能力**。两者不互相 import、不共享运行时状态。
 
+### 0.1 命名约定：域包 ≠ 部署单元
+
+当前命名容易混淆，统一按三层理解：
+
+| 层 | 命名 | 当前 | 说明 |
+|---|---|---|---|
+| **域包** | 名词 | `src/engine`（推荐域）、`src/kg`（知识域） | 代码归属；两者是对等的 Python 包 |
+| **入口** | 动词/场景 | `scripts/train_semantic.py`、`run_batch_infer.py`、`kg_server.py` | 可执行入口 |
+| **部署单元** | 运行时 | `engine-batch`（Job）、`engine-kg`（Service） | 进程/镜像/资源/失败域 |
+
+**结论：`src/engine` 不是 `engine-batch`。** `src/engine` 是推荐域的包；
+`engine-batch` 是“入口脚本 + `src/engine` + 模型资产”组成的离线 Job。
+同理，`src/kg` 是知识域包，`engine-kg` 是它在线上运行时的部署单元。
+
+命名目标（后续可独立执行，不影响当前结构）：
+
+| 概念 | 当前 | 建议的最终名 |
+|---|---|---|
+| 推荐域包 | `src/engine/` | `src/recommendation/`（`engine` 保留一个版本的兼容别名） |
+| 知识域包 | `src/kg/` | `src/knowledge/`（`kg` 保留别名） |
+| 离线部署 | `engine-batch` | 不变（`batch` 是运行模式，不是域） |
+| 在线部署 | `engine-kg` | 不变（或 `engine-knowledge`） |
+
+本轮已完成的低风险部分：`src/kg` 已规范为真正的 `kg` 包（`kg.*` 绝对导入、
+去掉 `sys.path` 注入），与 `src/engine` 的包结构对等；目录重命名列入
+[`backlog.md`](backlog.md) 的 `ENG-16`。
+
 ---
 
 ## 1. 组件视图
