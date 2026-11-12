@@ -1,0 +1,21 @@
+{
+  "contract_version": 1,
+  "run_id": "20260101_000000",
+  "exported_at": 1767225600,
+  "behavior_window": {
+    "start": 0,
+    "end": 1767100005
+  },
+  "users_count": 3,
+  "resources_count": 3,
+  "behaviors_count": 6,
+  "ratings_count": 2,
+  "categories_count": 2,
+  "files_sha256": {
+    "users.csv": "2b35391cfabda009a84f26825d9bb347bb0d28d30311f88613526e1951ee8bd9",
+    "resources.csv": "759e552d16222df4aa8891b458e301abcd273872b514c8266b1f6b62bf0ae52b",
+    "categories.csv": "6b32fe9b49365f0d1e3b3980049ca23e071033b1d92c3ecd5c724b653bb1785c",
+    "behaviors.csv": "f1eed013f87c08501bcbd91eebcb28a69a477e2dfe9fb855ea46f7478179544e",
+    "ratings.csv": "2a2243dc51464ea76669a29a553786bf5f636ca65f602ab60183b2ae86035bb9"
+  }
+}

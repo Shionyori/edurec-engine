@@ -1,9 +1,11 @@
 # edurec-engine 推荐模型设计文档
 
 > **状态**：V2.0（已实现并评测，2026-09-16）
-> **接入目标**：edurec-platform（独立仓库，通过文件交接；契约见 `docs/platform-contract.md`）
+> **接入目标**：edurec-platform（独立仓库，通过文件交接；契约见
+> [`platform-contract.md`](platform-contract.md)，可执行版本见 [`../contracts/v1/`](../contracts/v1/README.md)）
 > **上一版**：V1.0「双塔 DSSM + 多任务 DeepFM + MMR」，已整体移除，见 git 历史（截至 `9563a65`）
-> **概率式扩展**：已实现、已评测、暂不启用，结论与根因见 `docs/gaussian-recall-status.md`
+> **概率式扩展**：已实现、已评测、暂不启用，结论与根因见
+> [`gaussian-recall-status.md`](gaussian-recall-status.md)
 
 ---
 
@@ -90,6 +92,7 @@ V2 换了一个起点：**用文本嵌入把「资源内容」与「学生需求
 **单向依赖**：`data → features → models → pipeline`。下层不依赖上层，每层可独立测试。
 
 ```
+contracts/v1/               交接契约：schema + golden fixtures + 校验器
 src/engine/
   config.py                 统一配置（dataclass + yaml）
   data/
@@ -102,6 +105,7 @@ src/engine/
     encoder.py              可插拔文本编码器 + 磁盘缓存 + 文本构造
   models/recall/
     semantic.py             语义双塔（阶段一）
+    gaussian.py             概率式表示（阶段二，默认不启用）
     trainer.py              样本构造与训练循环
   pipeline/
     evaluate.py             命中类指标（Recall/HitRate/NDCG/MRR/AUC）
@@ -109,13 +113,18 @@ src/engine/
     infer_batch.py          批量推理与交接文件写出
 scripts/
   gen_sim_data.py           模拟数据 → dataset/sim
-  load_movielens.py         公开集 → dataset/ml_processed
   train_semantic.py         训练 + 评估（含对照基线）
   run_batch_infer.py        批量推理 → 交接文件
+src/kg/
+  server.py                 知识生成 HTTP 服务（可选在线契约，见 docs/kg-service-contract.md）
+  generate.py               标题/描述 → 概念图
+  recommender/pipeline.py   生产用「资源 → 图 → 概念」流水线
+  research/                 EMBEDD-ER 研究/一次性脚本（不在生产路径）
 ```
 
-> 阶段二（高斯双塔）的 `models/recall/gaussian.py` 与其单测**不在本分支**，
-> 见 §6 与 `docs/gaussian-recall-status.md` 指向的 `feat/gaussian-probabilistic` 分支。
+> 阶段二（高斯双塔）的 `models/recall/gaussian.py` 与其单测已在 `main` 分支，
+> 默认配置不启用（`tower_kind="deterministic"`）。结论见
+> [`gaussian-recall-status.md`](gaussian-recall-status.md)。
 
 ---
 
@@ -136,7 +145,7 @@ scripts/
 **关键约束（直接决定模型形态）**：
 
 1. `resources.description` 是语义召回**唯一的文本信号来源**。
-   平台表里有该字段，但当前 `export_snapshot` 未导出——这是当前最大的阻塞项（§11.1）。
+   平台表里有该字段，`export_snapshot` 现已导出；旧快照缺失时 engine 降级为空串（§11.1）。
 2. `users` 无任何文本/属性 → 学生需求只能从**行为历史**反推。
 3. `user_behaviors` 有 `created_at` → 可以做**时间序切分**，防时序泄漏。
 
@@ -351,8 +360,8 @@ W₂² = ‖μ_u − μ_i‖² + Σ_d (σ_u,d − σ_i,d)²
 **为什么论文方法在此失效**：UKT/U-GLAD 有交互**序列**（时序建模能暴露行为的矛盾与稀疏），
 而本任务的学生需求只是**拼接文本**，不含「历史有多短/多矛盾」的信息。
 
-**完整分析、复现命令与四个后续方向见 `docs/gaussian-recall-status.md`**；
-代码保留在 `feat/gaussian-probabilistic` 分支。
+**完整分析、复现命令与四个后续方向见
+[`gaussian-recall-status.md`](gaussian-recall-status.md)**；代码已在 `main`，默认不启用。
 
 ---
 
@@ -487,14 +496,11 @@ score_i = w₁ · sim(q, c_i) + w₂ · ratinĝ_i + w₃ · popularitŷ_i
 
 ## 11. 已知限制与后续方向
 
-### 11.1 阻塞项（需要 platform 配合）
+### 11.1 已解决：`resources.csv` 已导出 `description`
 
-**`resources.csv` 未导出 `description`。** 语义召回的全部信号来自资源正文，
-而当前快照只有 `title`。平台 `resources` 表本就有 `description TEXT` 字段，
-只是 `export_snapshot` 没导出。engine 侧已做向后兼容（缺失降级为空串、不报错），
-**补导不构成破坏性变更**。变更请求见 `docs/platform-description-request.md`。
-
-在此之前，`platform` 数据源上的语义模型基本失效（不报错，但推荐质量接近热门兜底）。
+平台 `export_snapshot` 现已导出资源正文（`description`），且 engine 保持向后兼容：
+旧快照缺少该列时降级为空串、不报错。若拿到的是旧快照，语义模型仍会基本失效——
+重新导出一份带正文的快照即可。
 
 ### 11.2 模型层面的限制
 
@@ -506,10 +512,10 @@ score_i = w₁ · sim(q, c_i) + w₂ · ratinĝ_i + w₃ · popularitŷ_i
 
 ### 11.3 工程层面的待办
 
-1. `platform.py` 尚未校验 `meta.json` 的 `files_sha256`（契约建议项，能挡住拷贝中断）；
-2. 尚未做多路召回合并；一旦合并，出口必须补显式去重
+1. 尚未做多路召回合并；一旦合并，出口必须补显式去重
    （单路候选天然唯一，多路会重复）；
-3. `metadata["created_at"]` 未用于「新资源加权」，快照提供了该字段。
+2. `metadata["created_at"]` 未用于「新资源加权」，快照提供了该字段；
+3. `categories.csv` 目前不读取（engine 只用 `category_id` 整数）。
 
 ### 11.4 可能的后续方向
 

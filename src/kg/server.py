@@ -45,6 +45,7 @@ STOPWORDS = {
 }
 
 SERVICE_VERSION = "1.0"
+CONTRACT_VERSION = 1
 
 
 def _clean(name: str) -> str:
@@ -95,6 +96,7 @@ def generate(title: str, description: str = "", point_code: str = "",
         raw = ((item.get("graph") or {}).get("concepts")) or []
         concepts = filter_concepts(raw, min_rank, max_concepts)
         return {
+            "contract_version": CONTRACT_VERSION,
             "point_code": point_code,
             "title": title,
             "concepts": concepts,
@@ -131,7 +133,10 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         if self.path.rstrip("/") == "/health":
             self._send(200, {"status": "ok", "engine": "edurec-engine",
-                             "version": SERVICE_VERSION})
+                             "version": SERVICE_VERSION,
+                             "contract_version": CONTRACT_VERSION,
+                             "capabilities": ["knowledge/generate",
+                                              "knowledge/generate_batch"]})
         else:
             self._send(404, {"error": "not found"})
 
@@ -169,7 +174,7 @@ class Handler(BaseHTTPRequestHandler):
                             "concepts": [],
                             "error": f"{type(exc).__name__}: {exc}",
                         })
-                self._send(200, {"results": results})
+                self._send(200, {"contract_version": CONTRACT_VERSION, "results": results})
                 return
 
             self._send(404, {"error": "not found"})

@@ -1,8 +1,9 @@
 # 概率式（高斯）召回：现状警告与可行方向
 
 > **状态：已实现、已评测、暂不启用。**
-> 代码在分支 **`feat/gaussian-probabilistic`**（提交 `7bea821`），**不在主线**。
-> 本文档在主线保留，是为了让后来者先看到结论，而不是重新踩一遍坑。
+> 代码已在 `main`：`src/engine/models/recall/gaussian.py`，单测 `tests/test_gaussian.py`；
+> 默认配置 `tower_kind="deterministic"`，不会启用。本文档保留，是为了让后来者
+> 先看到结论，而不是重新踩一遍坑。
 >
 > 一句话结论：**在当前数据（MOOCCube）上，把表示从「一个点」升级为「一个分布」
 > 不会带来任何收益，且稳定地更差。** 根因不是实现 bug，而是方差学不到任何有效信息。
@@ -67,13 +68,12 @@ U-GLAD 式校准 `ĥ = μ ⊙ (1 − mean(σ²))` 在两种协议下都让指标
 ## 4. 当前处置
 
 - 主线 `tower_kind = "deterministic"`（阶段一），**不启用高斯塔**；
-- 高斯实现完整保留在 `feat/gaussian-probabilistic`，含 25 个单测，可随时复现；
-- `uncertainty_report()` 诊断保留在该分支，是判断「换数据集后是否值得启用」的第一道关卡。
+- 高斯实现与单测在 `main`，可随时复现；
+- `uncertainty_report()` 用于判断「换数据集后是否值得启用」。
 
-复现命令（在 `feat/gaussian-probabilistic` 分支）：
+复现命令：
 
 ```bash
-git switch feat/gaussian-probabilistic
 python -m scripts.train_semantic --data-source mooccube --tower-kind gaussian --sparse-tail 2
 # 输出会打印不确定性诊断：item_var_cv 接近 0 即说明该扩展在此数据上不成立
 ```
@@ -124,8 +124,7 @@ MOOCCube 每门课只有一段简介，一份学生需求对应什么并不含�
 
 - 设计文档：`docs/design.md`
 - 交接契约：`docs/platform-contract.md`
-- 论文原文（本地抽取的文本，供检索与引用核对）：`docs/papers/ukt.txt`、
-  `docs/papers/uglad.txt`、`docs/papers/coursehub.txt`
+- 引用信息（标题 / 作者 / DOI）：[`references.md`](references.md) 与 [`../CITATION.cff`](../CITATION.cff)
 
-> ⚠️ `docs/papers/` 是三篇论文的**全文抽取文本**，仅作本地检索与引用核对之用。
-> 若本仓库将来公开，建议移除该目录，改为只保留引用信息（标题 / 作者 / DOI）。
+> 论文原文抽取文本已从仓库移除（避免收录受版权保护的全文）；需要核对时按
+> `references.md` 里的 DOI 自行获取。

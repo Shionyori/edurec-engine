@@ -15,6 +15,13 @@
 
 对应地，platform 侧**不运行模型、不做推理**；模型权重只保留在 engine。
 
+**可执行版本**：本契约的 schema、golden fixture 与校验器在
+[`../contracts/v1/`](../contracts/v1/README.md)。改契约时先改那里，再同步 platform 的副本
+（`scripts/check-contract-sync.sh`）。
+
+**可选的第三方向**：知识生成 HTTP 服务（`scripts/kg_server.py`）是独立于本契约的
+在线能力，见 [`kg-service-contract.md`](kg-service-contract.md)。它不参与推荐主链路。
+
 ---
 
 ## 方向 A：platform → engine（数据快照）
@@ -39,13 +46,13 @@ engine 侧惯例是拷入 `dataset/platform_snapshot/<run_id>/`，目录名保�
 | `resources.csv`（可选列） | `description` | ⬜ | **资源正文**。语义召回模型的全部信号来自它；缺失时 engine 降级为空串（不报错），但**语义模型将基本失效**。建议 platform 在 `export_snapshot` 中补上该列 |
 | `behaviors.csv` | `user_id,resource_id,action,ts` | ✅ | 用户行为流水 |
 | `ratings.csv` | `user_id,resource_id,score,ts` | ✅ | 站内评分 |
-| `meta.json` | 见下 | ⬜ | 元信息与校验和。**缺失时不报错**，但版本校验会被跳过 |
+| `meta.json` | 见下 | ✅ | 元信息与校验和。规范快照必须包含；engine 对历史快照缺失时仍兼容（跳过版本/校验和） |
 | `categories.csv` | `category_id,name` | ⬜ | 平台会写出；engine 目前不读它（只用 `category_id` 整数，不用分类名） |
 
 > **关于 `description`：** 它不是「新增字段」而是「已有字段的导出」。平台
-> `resources` 表本就有 `description TEXT`（见 `docs/external/edurec-platform-design.md` §5.2），
-> 只是当前 `export_snapshot` 未导出。engine 侧已做向后兼容：读到该列就用，
-> 读不到就用空串——因此补导**不构成破坏性变更**，旧快照仍能跑通。
+> `resources` 表本就有 `description TEXT`（见 platform 的 `docs/design.md` §5.2），
+> `export_snapshot` 现已导出该列。engine 侧保持向后兼容：读到就用，
+> 读不到就用空串——因此旧快照仍能跑通，只是语义模型会基本失效。
 
 「必需」= 缺了就必须明确报错退出，不要静默继续。
 
@@ -70,7 +77,7 @@ engine 侧惯例是拷入 `dataset/platform_snapshot/<run_id>/`，目录名保�
 - `contract_version`：**当前为 `1`**。engine 读到不认识的版本应当**明确报错退出**，不要猜测字段含义。
 - `exported_at`、`behavior_window.*`、`created_at`、`ts` **一律是 Unix 秒**（不是毫秒、不是字符串）。
 - `behavior_window.start` 当前恒为 `0`（即导出全量行为，不按时间窗裁剪）；`end` 是导出时见到的最大时间戳。
-- `files_sha256` 可用于校验拷贝完整性——建议 engine 加载前校验一次，能挡住拷贝中断这类低级事故。
+- `files_sha256` 用于校验拷贝完整性：engine 加载前会逐个比对，不匹配直接报错（挡住拷贝中断）。
 
 ### 取值约定
 
@@ -89,14 +96,14 @@ engine 侧惯例是拷入 `dataset/platform_snapshot/<run_id>/`，目录名保�
 - 通过既有的 CLI 入口消费，保证训练与推理口径一致：
 
   ```bash
-  python -m scripts.train_all --data-source platform --snapshot-dir dataset/platform_snapshot/<run_id>
+  python -m scripts.train_semantic --data-source platform --snapshot-dir dataset/platform_snapshot/<run_id>
   python -m scripts.run_batch_infer --data-source platform --snapshot-dir dataset/platform_snapshot/<run_id>
   ```
 
   `run_batch_infer` 的两个参数也可用 `ENGINE_DATA_SOURCE` / `ENGINE_SNAPSHOT_DIR` 环境变量给，
   但**显式传参优先**——两条命令用同一份 `--snapshot-dir` 是「训练与推理口径一致」的前提。
 
-- **`--data-source platform` 是唯一会被导入 platform 的轨道。** sim / movielens 等自造数据轨仅用于
+- **`--data-source platform` 是唯一会被导入 platform 的轨道。** sim 等自造数据轨仅用于
   演示与回归测试，其 ID 与平台库无关，**不得**把它们的输出导入 platform。
 
 ---
@@ -115,9 +122,10 @@ engine 推理完成后写出结果文件，由人工或脚本拷到 platform，�
 platform 侧的实际路径由配置项 `engine.recommendations_file` 决定（默认即上表值，相对 `backend/`）。
 拷贝动作目前是手动的（`scripts/handoff.sh` 第 ⑤ 步），engine 不需要知道 platform 的目录布局。
 
-> ⚠️ engine 侧这个路径由 `cfg.model_dir`（默认 `"model"`）拼出，且**不可用命令行覆盖** ——
-> 它是相对**当前工作目录**解析的。从别的目录运行 `run_batch_infer`，产物会落在别处，
-> 而 platform 的拷贝步骤仍去 `model/` 找它。**务必在 engine 仓库根目录运行推理。**
+> engine 侧默认写到 `cfg.model_dir`（默认 `"model"`），相对**当前工作目录**解析；
+> `run_batch_infer` 可用 `--out-dir` 覆盖产物目录、`--model-dir` 覆盖模型目录。
+> `handoff.sh` 使用默认路径，因此它要求**在 engine 仓库根目录运行推理**——
+> 否则产物会落在别处，而 platform 的拷贝步骤仍去 `model/` 找它。
 
 ### 主文件格式（**逐字节严格**）
 
@@ -214,8 +222,7 @@ Authorization: Bearer <管理员 access_token>
 - 信封是**可选**的。缺失、为空、字段不全都**不得**影响平台导入，平台忽略未知字段。
 - 平台**存储但不解释**这些字段：不因 `scores` 改变排序，不因 `model.name` 改变行为。
 - 将来若新模型不产生分数或解释，**只是不写这两个字段**，不构成契约变更。
-- 当前 platform 的拷贝步骤（`scripts/handoff.sh` 第 ⑤ 步）只拷主文件，信封暂不会自动随行——
-  这属于 platform 侧的待办，不影响 engine 现在就按本约定写出信封。
+- `scripts/handoff.sh` 第 ⑤ 步会同时拷贝主文件与信封；信封缺失时只拷主文件，不影响导入。
 
 ---
 
@@ -256,7 +263,7 @@ Authorization: Bearer <管理员 access_token>
 | 导入返回 500 | 资源 ID 写成字符串（`"42"`）或小数（`42.0`） | 输出 JSON 整数 |
 | 导入返回 500 | 文件带 UTF-8 BOM | 用 `encoding="utf-8"` 写，不要 `utf-8-sig` |
 | 导入返回 500 | 非法 UTF-8 / 文件被截断 | 检查写出过程，改为原子重命名 |
-| `skipped_users` 异常大 | 键不是平台用户 ID，或用了 sim/movielens 轨道的输出 | 确认用 `--data-source platform` 且 ID 取自快照 |
+| `skipped_users` 异常大 | 键不是平台用户 ID，或用了 sim 轨道的输出 | 确认用 `--data-source platform` 且 ID 取自快照 |
 | `skipped_resources` 异常大 | 输出了快照 `resources.csv` 里没有的资源 ID | 以快照为准过滤 |
 | 某些用户推荐不更新 | 该用户在文件里缺失，或被判为空数组 | 覆盖全量用户；空数组表达不了「清空」 |
 | 前端看到的 `updated_at` 是刚刚 | 平台把「导入时刻」当作 `updated_at` | 真实生成时间写进信封的 `generated_at` |
@@ -271,86 +278,71 @@ Authorization: Bearer <管理员 access_token>
 - 交接物只包含「用户 ID → 资源 ID → 分数/解释」这类派生数据，不含原始行为明细的回流。
 - 交接通过**文件**完成，两仓库目录互不读写；engine 不需要、也不应该直连 platform 的数据库或 HTTP 接口
   （导入动作由 platform 的管理员接口发起）。
+- 唯一例外是**可选的**知识生成 HTTP 服务（方向 C）：platform 调用 engine 的
+  `kg_server.py`，engine 不反向调用 platform。它不参与推荐主链路，契约见
+  [`kg-service-contract.md`](kg-service-contract.md)。
 - 模型权重、特征表、训练日志等一律**不进入**交接物，只保留在 engine。
 
 ---
 
 ## 附录：engine 现状与本契约的差距
 
-> 以下是 **2026-09-16 的快照**（语义召回模型重建后，已并入 `main`），
-> 会随实现演进失效；前面的规范部分不会。清单本身**不是契约**，修掉这些差距不构成契约变更。
->
-> 标注「实测」的条目是在 platform 轨道上端到端跑过一轮后核对的，不是读代码的推断。
+> 以下是 **2026-11 的核对结果**（契约 v1 + `contracts/v1` 落地后）。
+> 前面的规范部分不随实现变化；本清单不是契约，修掉差距不构成契约变更。
 
 ### 已经符合的（换模型时必须保持）
 
 | 条款 | 现状 |
 |---|---|
 | 主文件形状 | ✅ `{str(user_id): [int resource_id, …]}`，`encoding="utf-8"`（无 BOM） |
-| 用平台原始 ID | ✅ **平台轨道上 ID 原样透传**：`platform.py` 直接用快照里的整数 ID，不做任何重编号（实测：输出键恰为快照用户，资源 ID 全部落在快照内）。MOOCCube 轨道不同——那里的课程 ID 是字符串，加载器排序后编号，原始 ID 留在 `metadata["source_id"]` 与 `id_map`，两条轨道的处理**不可相互套用** |
+| 用平台原始 ID | ✅ **平台轨道上 ID 原样透传**：`platform.py` 直接用快照里的整数 ID，不做任何重编号。MOOCCube 轨道不同——课程 ID 是字符串，加载器排序后编号，两条轨道**不可相互套用** |
 | 覆盖全量用户 | ✅ `infer_batch` 默认遍历 `bundle.users` 全部用户，冷启动走热门兜底并有计数 |
 | 按相关性降序 | ✅ 语义分与质量分融合后降序，顺序即排名 |
-| 自行去重 | ✅ 出口按 `argsort` 下标取候选，天然唯一；另有测试断言无重复 |
+| 自行去重 | ✅ 出口按 `argsort` 下标取候选，天然唯一；测试断言无重复 |
 | 硬约束「先写临时文件再原子重命名」 | ✅ `write_handoff` 写 `*.tmp` 后 `os.replace` |
-| 旁挂信封 | ✅ 写出 `recommendations.meta.json`，含 `scores`（与主文件顺序一一对应）、模型标识、质量权重、快照 `run_id`；`--no-envelope` 可关闭 |
-| 推荐里不含已交互内容 | ✅ 出口按 `behaviors` 过滤该用户已交互的课程（契约虽未强制，但 `behaviors.csv` 正是为此提供） |
-| 训练/推理口径一致 | ✅ 推理前校验编码器版本**与资源语料指纹**，不一致时明确报错退出（非零） |
+| 旁挂信封 | ✅ 写出 `recommendations.meta.json`，含 `scores`、模型标识、质量权重、`run_id` / `snapshot_run_id`；`--no-envelope` 可关闭 |
+| 推荐里不含已交互内容 | ✅ 出口按 `behaviors` 过滤该用户已交互的课程 |
+| 训练/推理口径一致 | ✅ 推理前校验编码器版本**与资源语料指纹**，不一致时明确报错退出 |
+| 加载前校验 `files_sha256` | ✅ `platform.py` 在 `meta.json` 带校验和时逐个比对，不匹配直接 `ValueError` |
+| 出口自检硬失败 | ✅ `run_batch_infer` 调用 `contracts/v1/validate.py`，违规即 `SystemExit`，不依赖 `assert` |
+| 数据源不会错选 | ✅ `--data-source` 在训练/推理入口均**必填**，不再默认 `mooccube` |
+| 资源正文 `description` | ✅ `export_snapshot` 已导出该列；缺失时 engine 仍降级为空串 |
 
-### 与契约条款不符或未落实的
+### 仍需注意（不构成契约违规）
 
-| 条款 | 差距 | 建议 |
+| 项 | 现状 | 说明 |
 |---|---|---|
-| 建议「加载前校验 `files_sha256`」 | ❌ `platform.py` 仍未比对 `meta.json` 里的校验和 | 加载时比对一次，挡住拷贝中断 |
-| `categories.csv` | 未读取 | 无需处理（engine 只用 `category_id` 整数），此处仅为完整性 |
-| 出口自检应当是硬失败 | ⚠️ 主文件的三条硬约束校验用的是 `assert`（`scripts/run_batch_infer.py:157-159`）。**`python -O` / `-OO` 会让它们静默消失**——最需要这道闸的场景恰好可能是生产化的运行方式 | 换成显式 `if ... raise SystemExit`；或至少在 README 注明不要带优化开关运行 |
-| 产物路径没有 run 命名空间 | ⚠️ 四个产物都是**固定单槽位**：`model/semantic_recall.pt`、`recommendations.json`、`recommendations.meta.json`、`metrics_semantic.json`，且 `model_dir` **不能用命令行覆盖**。换一条数据源轨道重跑会**覆盖**上一条的模型与结果 | 与 platform 的「单一文件」约定是一致的，但本机切换轨道前要先备份。注意指纹校验只挡得住「模型与数据不匹配」，挡不住「结果被静默换掉」 |
-| 信封缺 `run_id` | 只写了 `snapshot_run_id`（所用的快照），没有「本次推理」自己的标识 | 契约里两个字段都可选、故不违规；但同一模型跑多批产物时无法区分，建议加个时间戳或序号 |
+| `categories.csv` | engine 不读取 | 只用 `category_id` 整数，保留该文件便于人工核对 |
+| 产物路径 | 默认固定单槽位 `model/`；`run_batch_infer` 已支持 `--out-dir` | platform 约定读单一文件；切换数据源轨道时用 `--out-dir` 或先备份 |
+| 信封 `generated_at` | ✅ 已写；`run_id` 也已写 | 平台用它展示真实新鲜度 |
+| 多路召回 | 当前单路语义 + 质量融合 | 一旦合并多路候选，必须在出口补显式去重 |
+| `metadata_json.created_at` | 已读入 metadata，未用于特征 | 新资源加权属于后续模型工作 |
 
-### 契约未要求、但换模型时会踩到的实现问题
+### 接入前应当知道
 
-1. **资源正文（`description`）尚未由 platform 导出。** 语义召回的全部信号来自
-   `resources.csv` 的文本，而当前快照只有 `title`（MOOCCube 的 `about` 来自数据集本身）。
-   本地 `platform.py` 已支持该可选列、缺失时降级为空串，但**没有正文时语义模型基本失效**。
-   详见「方向 A · resources.csv」一节。
-2. **`metadata_json` 里的 `created_at` 尚未用于特征。** 快照提供了它（`platform.py`
-   读进 `metadata`），模型侧目前只用热度与评分，未做「新资源加权」。
-3. **多路召回合并时需要显式去重。** 当前是单路召回（语义），候选天然唯一；
-   一旦做多路合并（语义 + 协同 + 图），必须在上面的出口补一次显式去重。
-
-### 操作陷阱：默认数据源不是 `platform`
-
-`scripts/run_batch_infer.py` 的 `--data-source` **默认值是 `mooccube`**。不带参数直接运行，
-产出的 `model/recommendations.json` 里装的是 MOOCCube 的用户/课程 ID，**不是平台 ID**。
-把它拷进 platform 导入，`skipped_users` 会接近全量——而导入接口只回报跳过计数、**不报错**，
-于是现象是「导入成功但推荐没变化」。
-
-所以：**只要产物要交给 platform，就必须显式带 `--data-source platform --snapshot-dir <dir>`。**
-这也正是「方向 A」里那条「只有 platform 轨道可以被导入」的具体落地方式。
-
-### 与契约无关、但接入前应当知道
-
-- **这一版模型的收益尚未被证明。** MOOCCube 上（有正文、均值 400 字）语义召回的
-  HitRate@10 = 0.4432，**低于热门基线的 0.4930**，NDCG 与 MRR 同样全面落后。
-  数字与诊断见 [`gaussian-recall-status.md`](./gaussian-recall-status.md) §2。
-  **「契约通过」只说明能接得上，不等于值得上线**，建议先做一次「有正文 vs 无正文」的对比。
-- **platform 侧数据量是当前真正的瓶颈。** 2026-09-16 实测导出：**2 个用户 / 139 个资源 /
-  14 条行为 / 0 条评分**，且 139 个资源全是视频、没有一门课程。这个规模上任何模型都训练
-  与评估不出结论（训练 loss 直接是 0）。资源里 **126/139 已有正文**，只是 `export_snapshot`
-  没有导出这一列——补导 `description` 的变更请求见
-  [`platform-description-request.md`](./platform-description-request.md)。
+- **这一版模型的收益尚未被证明。** MOOCCube 上语义召回的 HitRate@10 = 0.4432，
+  低于热门基线 0.4930，NDCG 与 MRR 同样落后；融合热度后 HitRate@10 = 0.5758 才超过热门。
+  数字与诊断见 [`gaussian-recall-status.md`](gaussian-recall-status.md)。
+  「契约通过」只说明能接得上，不等于值得上线。
+- **platform 侧数据量是真正的瓶颈。** 快照规模小（用户/行为少、资源以视频为主）时，
+  任何模型都训练与评估不出结论；先积累真实行为，再谈模型收益。
 
 ### 已解决的历史问题（保留记录，便于对照）
 
 - ✅ 去重曾是隐式的、`rerank` 的「已看不推」曾从未生效、冷启动加权曾是均匀缩放：
-  旧流水线（MMR 重排那一版）的问题，随模型重建一并消失——重建后的出口显式过滤已交互课程。
-- ✅ `scripts/run_batch_infer.py` 的 `movielens` 分支曾误读 `dataset/sim/`：
-  重建后的入口只支持 `mooccube` / `sim` / `platform`，`movielens` 不再列出以免误导。
+  旧流水线（MMR 重排那一版）的问题，随模型重建一并消失。
+- ✅ `movielens` 轨道已移除：入口只支持 `mooccube` / `sim` / `platform`。
+- ✅ `scripts.train_all` / `scripts.infer_batch` 是旧文档里的错误命令名，已统一为
+  `train_semantic` / `run_batch_infer`。
+- ✅ `export_snapshot` 曾不导出 `description`，现已补齐（见「方向 A」）。
 
 ---
 
 ## 相关文档
 
+- 契约的可执行版本：[`../contracts/v1/README.md`](../contracts/v1/README.md)
+- 可选在线能力：[`kg-service-contract.md`](kg-service-contract.md)
+- 当前数据流：[`data-flow.md`](data-flow.md)
 - platform 侧：[`docs/engine-integration.md`](https://github.com/Shionyori/edurec-platform/blob/main/docs/engine-integration.md)
   ——接入形态与演进方向；[`docs/data-handoff.md`](https://github.com/Shionyori/edurec-platform/blob/main/docs/data-handoff.md)
   ——一轮刷新的完整步骤
-- 本仓库：[`docs/external/edurec-platform-design.md`](./external/edurec-platform-design.md) ——平台侧设计文档存档
