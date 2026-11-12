@@ -7,7 +7,7 @@ import yaml
 @dataclass
 class EngineConfig:
     seed: int = 42
-    data_source: str = "sim"                      # sim | movielens
+    data_source: str = "sim"                      # sim | mooccube | platform
 
     # 模拟器
     sim_n_users: int = 2000
@@ -23,28 +23,8 @@ class EngineConfig:
     train_ratio: float = 0.8
     val_ratio: float = 0.1
 
-    # 召回
-    recall_embed_dim: int = 64
-    recall_batch_size: int = 1024
-    recall_lr: float = 1e-3
-    recall_epochs: int = 10
-    recall_tau: float = 0.05
-    recall_k: int = 50
-
-    # 排序
-    rank_batch_size: int = 256
-    rank_lr: float = 1e-3
-    rank_epochs: int = 5
-    rank_neg_per_pos: int = 3
-    rank_w_ctr: float = 1.0
-    rank_w_cvr: float = 0.5
-    rank_w_rating: float = 0.5
-
-    # 重排
+    # 输出
     top_n: int = 20
-    mmr_lambda: float = 0.5
-    cold_age_days: float = 7.0
-    cold_weight: float = 1.2
 
     # 路径
     data_dir: str = "dataset"
@@ -52,7 +32,7 @@ class EngineConfig:
     snapshot_dir: str = ""   # platform 快照目录（data_source=platform 时使用）
 
     # MOOCCube（data_source=mooccube 时使用）
-    mooccube_dir: str = "dataset/MOOCCube/MOOCCube"
+    mooccube_dir: str = "dataset/MOOCCube"
     mooccube_max_users: int = 5000        # 活跃用户抽样上限（0 = 不限）
     # 视为「活跃」的最少选课数：MOOCCube 用户中位仅 2 门课，阈值 5 时时间序切分后
     # 测试集只剩约 1 门课、监督信号太弱；取 10 时仍有 6,548 人可选。

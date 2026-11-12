@@ -11,7 +11,7 @@
     文本    = course.json 的 name + about + chapter + display_name
               （与 Generation.ipynb 构造 .ttl 图时的文本一致）
 
-运行: .\.venv\Scripts\python.exe eval_original_methods.py
+运行: python src/kg/research/eval_original_methods.py
 """
 import json
 import os
@@ -19,7 +19,10 @@ import re
 import sys
 import warnings
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_KG_DIR = os.path.dirname(_HERE)
+sys.path.insert(0, _KG_DIR)
+sys.path.insert(0, _HERE)
 sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
 warnings.filterwarnings("ignore")
 

@@ -8,14 +8,17 @@
   B. 混合引擎  Score = α·Sim + β·Hotness + γ·Prereq（recommender/engine.py）
   C. 消融：逐项开关，看每个信号的真实贡献
 
-运行: .\.venv\Scripts\python.exe eval_hybrid_engine.py
+运行: python src/kg/research/eval_hybrid_engine.py
 """
 import json
 import os
 import sys
 import warnings
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_KG_DIR = os.path.dirname(_HERE)
+sys.path.insert(0, _KG_DIR)
+sys.path.insert(0, _HERE)
 sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
 warnings.filterwarnings("ignore")
 

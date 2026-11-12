@@ -5,7 +5,10 @@ import re
 import sys
 import time
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_KG_DIR = os.path.dirname(_HERE)
+sys.path.insert(0, _KG_DIR)
+sys.path.insert(0, _HERE)
 
 import pandas as pd  # noqa: E402
 

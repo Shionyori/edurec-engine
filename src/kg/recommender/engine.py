@@ -42,7 +42,7 @@ def cos_to_unit(v):
 #
 # 平台侧的交接物是「表导出」：resources 表全列 + user_behaviors 表全列，
 # 资源 ID 是 B 站侧的整数主键（与 MOOCCube 的 C_course-v1:… 字符串 ID 无关）。
-# 详见 DATA_FLOW.md。
+# 详见 docs/data-flow.md。
 # --------------------------------------------------------------------------- #
 def tokenize_zh(text):
     """中文分词。用 jieba（requirements 里已有），过滤空白与单字标点。"""
@@ -170,7 +170,7 @@ class Recommender:
         self.verbose = verbose
         self.method = method
 
-        # 文本 = 标题 + 正文（正文是语义召回的主要信号，见 DATA_FLOW.md §4.1）
+        # 文本 = 标题 + 正文（正文是语义召回的主要信号，见 docs/data-flow.md）
         res["text"] = (res["title"].fillna("") + "。"
                        + res["description"].fillna("")).str.strip()
 
