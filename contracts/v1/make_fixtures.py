@@ -93,7 +93,9 @@ ENVELOPE = {
 
 def _write_csv(path: str, header: list[str], rows: list[list[str]]) -> None:
     with open(path, "w", encoding="utf-8", newline="") as f:
-        w = csv.writer(f)
+        # 显式用 LF：`csv.writer` 默认 CRLF，而 `.gitattributes` 会把 CSV 归一化为
+        # LF；若按 CRLF 计算 meta.json 的 sha256，新克隆（LF）会校验失败。
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(header)
         w.writerows(rows)
 
