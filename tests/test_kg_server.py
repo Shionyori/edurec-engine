@@ -15,10 +15,10 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-KG = ROOT / "src" / "kg"
-sys.path.insert(0, str(KG))
+SRC = ROOT / "src"
+sys.path.insert(0, str(SRC))
 
-import server  # noqa: E402
+from kg import server  # noqa: E402
 
 
 @pytest.fixture

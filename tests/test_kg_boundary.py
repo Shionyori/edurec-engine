@@ -7,7 +7,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-KG = ROOT / "src" / "kg"
+SRC = ROOT / "src"
+KG = SRC / "kg"
 
 PRODUCTION = [
     KG / "server.py",
@@ -25,9 +26,9 @@ def test_production_sources_do_not_reference_research():
 
 
 def test_server_module_imports_and_filters():
-    sys.path.insert(0, str(KG))
+    sys.path.insert(0, str(SRC))
     try:
-        server = importlib.import_module("server")
+        server = importlib.import_module("kg.server")
         raw = [
             {"concept": "实变函数", "pageRank": 0.9},
             {"concept": "实变函数", "pageRank": 0.8},   # 去重
@@ -38,4 +39,4 @@ def test_server_module_imports_and_filters():
         got = server.filter_concepts(raw, min_rank=0.005, max_concepts=30)
         assert [c["name"] for c in got] == ["实变函数", "测度"]
     finally:
-        sys.path.remove(str(KG))
+        sys.path.remove(str(SRC))

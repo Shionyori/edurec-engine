@@ -35,7 +35,6 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 KG_DIR = os.path.dirname(os.path.abspath(__file__))          # <repo>/src/kg
 REPO_ROOT = os.path.dirname(os.path.dirname(KG_DIR))        # <repo>
 MODEL_DIR = os.path.join(REPO_ROOT, "model")                # 数据/权重
-sys.path.insert(0, KG_DIR)
 
 MIN_PAGE_RANK = 0.005
 MAX_CONCEPTS = 30
@@ -130,7 +129,7 @@ def filter_concepts(raw_concepts, min_rank: float, max_concepts: int):
 def generate(title: str, description: str = "", point_code: str = "",
              min_rank: float = MIN_PAGE_RANK, max_concepts: int = MAX_CONCEPTS) -> dict:
     """跑一次流水线，只取概念（嵌入结果丢弃，避免 BERT 加载与落盘开销）。"""
-    from recommender.pipeline import Resource, run
+    from kg.recommender.pipeline import Resource, run
 
     title = _clean(title)
     if not title:

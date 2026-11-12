@@ -17,14 +17,14 @@ import warnings
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _KG_DIR = os.path.dirname(_HERE)
-sys.path.insert(0, _KG_DIR)
+sys.path.insert(0, os.path.dirname(_KG_DIR))
 sys.path.insert(0, _HERE)
 sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
 warnings.filterwarnings("ignore")
 
 import numpy as np  # noqa: E402
 
-from recommender.engine import Recommender  # noqa: E402
+from kg.recommender.engine import Recommender  # noqa: E402
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 N_USERS = 2000

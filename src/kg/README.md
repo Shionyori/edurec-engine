@@ -1,5 +1,12 @@
 # src/kg —— 知识图谱与概念生成（EMBEDD-ER 派生物）
 
+`src/kg` 是一个**真正的 Python 包 `kg`**（与 `src/engine` 对等）：
+
+- 内部导入统一写 `from kg.recommender...` / `from kg.embeddings...` /
+  `from kg.preprocessing...`；
+- 入口脚本只把 `src` 加入 `sys.path`，不再把 `src/kg` 当源码根；
+- 不再依赖 `sys.path.insert` 的副作用来解析内部模块。
+
 本目录只保留**生产路径**上会被用到的代码：
 
 ```

@@ -19,6 +19,6 @@
 .venv/bin/python src/kg/research/eval_hybrid_engine.py
 ```
 
-脚本会把 `src/kg` 与自身目录加入 `sys.path`，因此仍能 import
-`recommender.*` / `embeddings.*` / `preprocessing.*`。旧的
-`recommender` 原型说明见 [`recommender-prototype.md`](recommender-prototype.md)。
+脚本会把 `src` 与自身目录加入 `sys.path`，因此能 import
+`kg.recommender.*` / `kg.embeddings.*` / `kg.preprocessing.*`（生产包）。
+旧的 `recommender` 原型说明见 [`recommender-prototype.md`](recommender-prototype.md)。

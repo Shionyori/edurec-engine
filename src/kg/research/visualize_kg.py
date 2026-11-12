@@ -29,7 +29,7 @@ import warnings
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _KG_DIR = os.path.dirname(_HERE)
-sys.path.insert(0, _KG_DIR)
+sys.path.insert(0, os.path.dirname(_KG_DIR))
 sys.path.insert(0, _HERE)
 
 import matplotlib  # noqa: E402
@@ -40,10 +40,10 @@ import numpy as np  # noqa: E402
 import rdflib  # noqa: E402
 from pyvis.network import Network  # noqa: E402
 
-from embeddings.embedder import decode_concept  # noqa: E402
-from recommender.build_embeddings import load_embeddings  # noqa: E402
-from recommender.idmap import build_reverse_map, cid_from_filename  # noqa: E402
-from recommender.stats import load_courses  # noqa: E402
+from kg.embeddings.embedder import decode_concept  # noqa: E402
+from kg.recommender.build_embeddings import load_embeddings  # noqa: E402
+from kg.recommender.idmap import build_reverse_map, cid_from_filename  # noqa: E402
+from kg.recommender.stats import load_courses  # noqa: E402
 
 warnings.filterwarnings("ignore")
 

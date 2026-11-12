@@ -7,7 +7,7 @@ import warnings
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _KG_DIR = os.path.dirname(_HERE)
-sys.path.insert(0, _KG_DIR)
+sys.path.insert(0, os.path.dirname(_KG_DIR))
 sys.path.insert(0, _HERE)
 sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
 warnings.filterwarnings("ignore")
@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore")
 import numpy as np  # noqa: E402
 import rdflib  # noqa: E402
 
-from embeddings.embedder import load_model_, node_embeddings  # noqa: E402
+from kg.embeddings.embedder import load_model_, node_embeddings  # noqa: E402
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 GRAPH_DIR = os.path.join(ROOT, "output", "graphs", "v01")

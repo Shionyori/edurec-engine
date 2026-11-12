@@ -7,13 +7,13 @@ import sys
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _KG_DIR = os.path.dirname(_HERE)
-sys.path.insert(0, _KG_DIR)
+sys.path.insert(0, os.path.dirname(_KG_DIR))
 sys.path.insert(0, _HERE)
 sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
 
 import numpy as np  # noqa: E402
 
-from recommender.engine import NEUTRAL_PREREQ, Recommender  # noqa: E402
+from kg.recommender.engine import NEUTRAL_PREREQ, Recommender  # noqa: E402
 
 # 已被否决的门控版本参数，仅用于对照复现
 PREREQ_GATE = 0.3
@@ -66,7 +66,7 @@ def sc_sim_plus_hot(uvec, lc, cid):
 def sc_sim_hot_gated(uvec, lc, cid):
     """当前默认逻辑：先修门控 + 微加权。"""
     base = 0.75 * (rec.similarity(uvec, cid) or 0.0) + 0.22 * rec.popularity_of(cid)
-    from recommender.prerequisites import prerequisite_score
+    from kg.recommender.prerequisites import prerequisite_score
 
     p, _, _ = prerequisite_score(rec.graph, lc, cid)
     if p is None:
@@ -78,7 +78,7 @@ def sc_sim_hot_gated(uvec, lc, cid):
 
 def sc_sim_hot_linear(uvec, lc, cid):
     """旧默认逻辑：先修当线性加分项。"""
-    from recommender.prerequisites import prerequisite_score
+    from kg.recommender.prerequisites import prerequisite_score
 
     p, _, _ = prerequisite_score(rec.graph, lc, cid)
     p = p if p is not None else NEUTRAL_PREREQ

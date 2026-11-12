@@ -13,19 +13,18 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np  # noqa: E402
 
-from recommender.build_embeddings import load_embeddings  # noqa: E402
-from recommender.idmap import build_reverse_map, resolve  # noqa: E402
-from recommender.prerequisites import (  # noqa: E402
+from kg.recommender.build_embeddings import load_embeddings  # noqa: E402
+from kg.recommender.idmap import build_reverse_map, resolve  # noqa: E402
+from kg.recommender.prerequisites import (  # noqa: E402
     build_graph,
     course_prereq_concepts,
     prerequisite_score,
 )
-from recommender.profile import build_user_courses, build_user_vectors  # noqa: E402
-from recommender.stats import load_cache  # noqa: E402
+from kg.recommender.profile import build_user_courses, build_user_vectors  # noqa: E402
+from kg.recommender.stats import load_cache  # noqa: E402
 
 DEFAULT_WEIGHTS = {"sim": 0.75, "hot": 0.22, "prereq": 0.03}
 # 无法判定先修时的中性分：不用 1.0（会白送分给无信息课程），也不用 0（会误伤新课程）
@@ -391,7 +390,7 @@ class Recommender:
         先修项只取决于用户已学概念与候选课程，跨不同权重配置是同一个值。
         一次评测要跑多组权重，不预计算就会重复算好几遍。
         """
-        from recommender.prerequisites import prerequisite_score
+        from kg.recommender.prerequisites import prerequisite_score
 
         out = {}
         for i, uid in enumerate(user_ids):
@@ -424,7 +423,7 @@ class Recommender:
         if weights:
             w.update(weights)
 
-        from recommender.prerequisites import prerequisite_score
+        from kg.recommender.prerequisites import prerequisite_score
 
         rng = np.random.default_rng(seed)
         pool = candidates if candidates is not None else sorted(self.vec_by_raw)

@@ -21,16 +21,16 @@ import warnings
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _KG_DIR = os.path.dirname(_HERE)
-sys.path.insert(0, _KG_DIR)
+sys.path.insert(0, os.path.dirname(_KG_DIR))
 sys.path.insert(0, _HERE)
 sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
 warnings.filterwarnings("ignore")
 
 import numpy as np  # noqa: E402
 
-from recommender.build_embeddings import load_embeddings  # noqa: E402
-from recommender.idmap import build_reverse_map  # noqa: E402
-from recommender.stats import load_courses, read_tsv_pairs  # noqa: E402
+from kg.recommender.build_embeddings import load_embeddings  # noqa: E402
+from kg.recommender.idmap import build_reverse_map  # noqa: E402
+from kg.recommender.stats import load_courses, read_tsv_pairs  # noqa: E402
 from similarity.metrics import cosine_similarity  # noqa: E402
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -171,7 +171,7 @@ def emb_tfidf_original(texts):
     原实现 reduce=True 会调 TSNE(n_components=700)：582 篇文本时能跑通，
     但要求 perplexity(5) < n_samples，样本数不足时直接报错 —— 这里如实捕获。
     """
-    from embeddings.tfidf import tfidf_embeddings
+    from kg.embeddings.tfidf import tfidf_embeddings
     return tfidf_embeddings(texts)
 
 
@@ -180,13 +180,13 @@ def emb_tfidf_noreduce(texts):
 
     原函数的降维到 700 维对 582 篇文本既无必要也无意义，关掉它才拿得到真实 TF-IDF 向量。
     """
-    from embeddings.tfidf import tfidf_embeddings
+    from kg.embeddings.tfidf import tfidf_embeddings
     return tfidf_embeddings(texts, reduce=False)
 
 
 def emb_doc2vec_original(texts):
     """原 embeddings/doc2vec.py 的字面行为（含其预处理与缺点）。"""
-    from embeddings.doc2vec import doc2vec_embeddings
+    from kg.embeddings.doc2vec import doc2vec_embeddings
     return doc2vec_embeddings(texts)
 
 
@@ -216,7 +216,7 @@ def emb_bert(texts, model_name, limit_chars=512):
     注意：原函数硬编码 model_name="bert-base-uncased"（英文词表，对中文几乎无效），
     所以这里通过原函数已参数化的 model_name 传入中文模型；预训练框架与调用链与原项目一致。
     """
-    from embeddings.bert import bert_embeddings
+    from kg.embeddings.bert import bert_embeddings
     return bert_embeddings([t[:limit_chars] for t in texts], model_name=model_name)
 
 

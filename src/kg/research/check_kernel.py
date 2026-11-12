@@ -26,8 +26,8 @@ import torch
 print("numpy", np.__version__, "| pandas", pd.__version__, "| sklearn", sklearn.__version__)
 print("rdflib", rdflib.__version__, "| gensim", gensim.__version__)
 print("torch", torch.__version__, "| cuda available:", torch.cuda.is_available())
-from embeddings.methods import embeddings
-from preprocessing.text import text2RDF
+from kg.embeddings.methods import embeddings
+from kg.preprocessing.text import text2RDF
 from similarity.metrics import distance_matrix
 from classification.classification import classify_cv
 from plotting.graph import visualise_rdf_graph
@@ -35,7 +35,7 @@ print("project modules imported OK")
 from similarity.metrics import distance_matrix
 X = np.random.rand(6, 8)
 print("cosine matrix shape:", np.asarray(distance_matrix(list(X), method="cosine")).shape)
-from embeddings.tfidf import tfidf_embeddings
+from kg.embeddings.tfidf import tfidf_embeddings
 print("tfidf ok")
 """
 
